@@ -1,0 +1,10 @@
+OpenROAD-flow-scripts/
+.venv/
+__pycache__/
+*.pyc
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+.ipynb_checkpoints/
+*.egg-info/
