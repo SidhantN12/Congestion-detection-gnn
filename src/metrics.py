@@ -22,3 +22,21 @@ def fraction_above(ratio, threshold):
     """Fraction of GCells whose combined congestion exceeds `threshold`."""
     combined = combined_congestion(ratio)
     return float(np.count_nonzero(combined > threshold)) / combined.size
+
+
+def _rank(x):
+    """Rank-transform a 1D array (ties broken arbitrarily but stably -
+    fine here since congestion ratios are floats, ties are ~never exact).
+    Avoids adding scipy as a dependency for something this small.
+    """
+    order = np.argsort(x)
+    ranks = np.empty_like(order, dtype=np.float64)
+    ranks[order] = np.arange(len(x), dtype=np.float64)
+    return ranks
+
+
+def spearman_corr(pred, target):
+    """Spearman rank correlation between two 1D arrays."""
+    pred_rank = _rank(np.asarray(pred).reshape(-1))
+    target_rank = _rank(np.asarray(target).reshape(-1))
+    return float(np.corrcoef(pred_rank, target_rank)[0, 1])
