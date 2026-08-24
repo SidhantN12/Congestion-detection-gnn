@@ -60,6 +60,9 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--target-spearman", type=float, default=0.95)
     parser.add_argument("--out-prefix", default="data/raw/phase7_overfit")
+    parser.add_argument("--save-checkpoint", default=None,
+                         help="Path to save the trained model checkpoint (state_dict "
+                              "+ architecture config), e.g. for the Phase 8 viewer.")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -135,6 +138,17 @@ def main():
 
     print(f"\nPASS: model memorised the sample (Spearman >= {args.target_spearman} "
           f"on both channels)")
+
+    if args.save_checkpoint:
+        torch.save({
+            "state_dict": model.state_dict(),
+            "in_dims": in_dims,
+            "edge_types": edge_types,
+            "hidden_dim": args.hidden_dim,
+            "num_layers": args.num_layers,
+            "trained_on": args.graph_path,
+        }, args.save_checkpoint)
+        print(f"Saved checkpoint to {args.save_checkpoint}")
 
     # ---- plots ----
     grid_shape = tuple(data["gcell"].grid_shape.numpy())
