@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Congestion GNN Progress</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F6F7F9;
+    --surface: #FFFFFF;
+    --surface-sunken: #EEF1F4;
+    --text: #1B222B;
+    --text-muted: #5B6572;
+    --text-faint: #87919C;
+    --border: #DBE1E8;
+    --border-strong: #C2CAD4;
+    --accent: #B5652F;
+    --accent-ink: #8C4A1F;
+    --accent-tint: #F3E4D8;
+    --good: #2F7A5C;
+    --good-tint: #E1EFE8;
+    --info: #2E6E8E;
+    --info-tint: #E2EDF2;
+    --font-display: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    --font-body: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+    --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10141A;
+      --surface: #171C24;
+      --surface-sunken: #10141A;
+      --text: #E4E8ED;
+      --text-muted: #9AA5B1;
+      --text-faint: #6B7480;
+      --border: #2A313C;
+      --border-strong: #3A4350;
+      --accent: #E08A4E;
+      --accent-ink: #F0A876;
+      --accent-tint: #33241A;
+      --good: #4FAE87;
+      --good-tint: #1B2E27;
+      --info: #6FB4D6;
+      --info-tint: #17262E;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #10141A;
+    --surface: #171C24;
+    --surface-sunken: #10141A;
+    --text: #E4E8ED;
+    --text-muted: #9AA5B1;
+    --text-faint: #6B7480;
+    --border: #2A313C;
+    --border-strong: #3A4350;
+    --accent: #E08A4E;
+    --accent-ink: #F0A876;
+    --accent-tint: #33241A;
+    --good: #4FAE87;
+    --good-tint: #1B2E27;
+    --info: #6FB4D6;
+    --info-tint: #17262E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+
+  /* ---------- Masthead ---------- */
+
+  header.masthead {
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 2px solid var(--border-strong);
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+    -webkit-mask-image: linear-gradient(to bottom, black, black 55%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black, black 55%, transparent 100%);
+    padding-top: 8px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+
+  h1.title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(28px, 4.4vw, 38px);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 14px;
+    color: var(--text);
+  }
+
+  .subtitle {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--text-muted);
+    max-width: 58ch;
+    margin: 0 0 22px;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+
+  .meta-row span b { color: var(--text-muted); font-weight: 500; }
+
+  /* ---------- Progress strip ---------- */
+
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+    margin: 28px 0 6px;
+  }
+
+  .strip .seg {
+    height: 7px;
+    border-radius: 2px;
+    background: var(--good);
+  }
+  .strip .seg.pending {
+    background: repeating-linear-gradient(
+      45deg, var(--border-strong), var(--border-strong) 3px, transparent 3px, transparent 6px
+    );
+  }
+
+  .strip-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+  }
+
+  /* ---------- Intro ---------- */
+
+  .intro {
+    font-size: 18px;
+    color: var(--text);
+    margin: 36px 0 48px;
+  }
+  .intro strong { color: var(--accent-ink); font-weight: 600; }
+
+  /* ---------- Phase sections ---------- */
+
+  section.phase {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 4px 20px;
+    margin-bottom: 8px;
+  }
+
+  .rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .rail .num {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--surface);
+    background: var(--accent);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .rail .line {
+    flex: 1;
+    width: 2px;
+    background: var(--border);
+    margin-top: 6px;
+  }
+  section.phase:last-of-type .rail .line { display: none; }
+
+  .phase-body { padding-bottom: 40px; }
+
+  .phase-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin-bottom: 10px;
+  }
+
+  h2.phase-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 21px;
+    color: var(--text);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 100px;
+    background: var(--good-tint);
+    color: var(--good);
+    white-space: nowrap;
+  }
+  .pill.progress {
+    background: var(--info-tint);
+    color: var(--info);
+  }
+
+  /* ---------- Detour (false-start narrative) ---------- */
+
+  .detour {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--surface-sunken);
+    border-radius: 6px;
+    font-size: 15.5px;
+    color: var(--text-muted);
+  }
+  .detour .detour-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .detour p { margin: 0 0 8px; color: var(--text-muted); }
+  .detour p:last-child { margin-bottom: 0; }
+  .detour code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--surface);
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .phase-body p {
+    margin: 0 0 14px;
+    color: var(--text);
+  }
+  .phase-body p:last-of-type { margin-bottom: 0; }
+
+  .result {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+  }
+  .result .label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .result p {
+    font-family: var(--font-mono);
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .aside {
+    margin-top: 14px;
+    font-size: 15px;
+    color: var(--text-muted);
+    padding-left: 14px;
+    border-left: 2px solid var(--border);
+  }
+
+  /* ---------- Concept reference ---------- */
+
+  .concepts {
+    margin: 4px 0 52px;
+    padding: 28px 28px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .concepts h2.section-title {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .concepts .section-intro {
+    color: var(--text-muted);
+    font-size: 15.5px;
+    margin: 0 0 26px;
+    max-width: 62ch;
+  }
+  .concept-block { margin-bottom: 30px; }
+  .concept-block:last-child { margin-bottom: 0; }
+  .concept-block h3 {
+    font-family: var(--font-display);
+    font-size: 16.5px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+  .table-scroll { overflow-x: auto; margin-bottom: 10px; }
+  .node-table {
+    width: 100%;
+    min-width: 480px;
+    border-collapse: collapse;
+    font-size: 14.5px;
+  }
+  .node-table th {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border-strong);
+    white-space: nowrap;
+  }
+  .node-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+  .node-table td.type-name {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent-ink);
+    white-space: nowrap;
+  }
+  .node-table td.count {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .concept-block .note {
+    font-size: 14.5px;
+    color: var(--text-muted);
+    margin: 4px 0 0;
+  }
+  dl.metric-defs { margin: 0; }
+  .metric-def {
+    margin-bottom: 18px;
+    padding-left: 16px;
+    border-left: 2px solid var(--border);
+  }
+  .metric-def:last-child { margin-bottom: 0; }
+  .metric-def dt {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent-ink);
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .metric-def dd {
+    margin: 0;
+    color: var(--text);
+    font-size: 15.5px;
+  }
+
+  /* ---------- Next steps ---------- */
+
+  .next {
+    margin-top: 8px;
+    padding: 28px 28px 8px;
+    background: var(--surface-sunken);
+    border-radius: 8px;
+  }
+  .next h2 {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 18px;
+  }
+  .next-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 24px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 560px) {
+    .next-grid { grid-template-columns: 1fr; }
+  }
+  .next-item .tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--info);
+    background: var(--info-tint);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .next-item p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+
+  /* ---------- Footer ---------- */
+
+  footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 14.5px;
+    color: var(--text-faint);
+  }
+  footer p { margin: 0 0 8px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">B.Tech Final-Year Project &middot; Progress Report</p>
+    <h1 class="title">Teaching a Graph Neural Network to Spot Chip Wiring Jams Before They Happen</h1>
+    <p class="subtitle">All 8 phases of the pipeline-validation plan complete, run end-to-end on a tiny reference chip design.</p>
+    <div class="meta-row">
+      <span><b>Design used:</b> gcd (~600 cells), Nangate45</span>
+      <span><b>Phases complete:</b> 0&ndash;8 of 8</span>
+      <span><b>Scope:</b> pipeline validation, not a benchmark result</span>
+    </div>
+  </header>
+
+  <div class="strip-labels"><span>Phase 0</span><span>8</span></div>
+  <div class="strip">
+    <div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div>
+    <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+  </div>
+
+  <p class="intro">
+    Modern chips are laid out in stages: first the components (transistors, logic gates) are placed on the die,
+    and only afterward are the microscopic wires connecting them actually routed. Routing can fail in specific
+    spots when too many wires need to pass through too little space &mdash; this is called <strong>congestion</strong>,
+    and normally you only find out about it by running the (slow) routing step. This project trains a
+    <strong>graph neural network</strong> to look at a chip <em>before</em> routing and predict where congestion will
+    happen, directly from the placed components &mdash; skipping the expensive routing step entirely. Before scaling up
+    to a large benchmark, the whole pipeline is being validated end-to-end on a tiny, fast test design. Below is
+    what that validation covered, phase by phase.
+  </p>
+
+  <div class="concepts">
+    <h2 class="section-title">Before the phase log: what the model actually sees, and how it's graded</h2>
+    <p class="section-intro">
+      Two pieces of vocabulary come up constantly below &mdash; what goes <em>into</em> the model, and how a
+      finished prediction gets scored. Worth defining once, up front, rather than re-explaining inline every time.
+    </p>
+
+    <div class="concept-block">
+      <h3>The input: three kinds of nodes</h3>
+      <p style="font-size:15.5px; color:var(--text-muted); margin:0 0 14px;">
+        Graph neural networks don't take an image or a table &mdash; they take a <strong>graph</strong>: a set of
+        nodes, each carrying its own list of numbers, connected by edges. The chip layout gets converted into
+        exactly that, with three kinds of nodes:
+      </p>
+      <div class="table-scroll">
+        <table class="node-table">
+          <thead>
+            <tr><th>Node type</th><th>How many</th><th>What it carries (its features)</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="type-name">cell</td>
+              <td class="count">606&ndash;607</td>
+              <td>One per placed component: width &amp; height, pin count (how many wires touch it), and x/y
+                position on the chip.</td>
+            </tr>
+            <tr>
+              <td class="type-name">net</td>
+              <td class="count">631&ndash;632</td>
+              <td>One per wire (a "net" connects one output to one or more inputs): fanout (how many components it
+                touches), wire span (how far its furthest-apart connections are), and the shape of the rectangle
+                spanning all its connections.</td>
+            </tr>
+            <tr>
+              <td class="type-name">gcell</td>
+              <td class="count">144&ndash;289</td>
+              <td>One per small grid tile the router divides the chip into: how densely packed with components
+                that tile is, how many wire-endpoints sit in it, and how much wiring room exists there in each of
+                two directions &mdash; known before routing runs, since it depends only on the manufacturing
+                layer stack, not on how wires end up drawn.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        Four kinds of connection tie these together: which components sit on which wires, which tile each
+        component physically sits in, which components are geometrically close to each other (nearest 8,
+        regardless of whether they share a wire), and which tiles neighbour each other on the grid.
+      </p>
+      <p class="note">
+        Every measurement is relative to the manufacturing grid, never a raw physical distance &mdash; a component
+        is "2 placement-slots wide," not "0.38 micrometres" &mdash; so the same trained model could in principle
+        carry over to a different manufacturing process without starting from scratch. Untested here, but the
+        reason for the choice.
+      </p>
+    </div>
+
+    <div class="concept-block">
+      <h3>The metrics: how a prediction gets graded</h3>
+      <dl class="metric-defs">
+        <div class="metric-def">
+          <dt>Spearman correlation</dt>
+          <dd>Ignores the exact predicted number and asks only: did the model get the <em>order</em> right? If it
+            says tile A is worse than tile B, is that actually true? 1.0 = perfect ranking, 0 = no better than
+            guessing, negative = backwards. A model that's consistently off by a fixed amount still scores
+            perfectly here, since the ranking is unaffected &mdash; which fits how this is actually used: knowing
+            where to look first matters more than the exact number.</dd>
+        </div>
+        <div class="metric-def">
+          <dt>Kendall's &tau; (tau)</dt>
+          <dd>Answers the same underlying question as Spearman &mdash; is the ranking right &mdash; but counts it
+            differently: it directly tallies how many <em>pairs</em> of tiles got their relative order right
+            versus wrong, rather than comparing rank positions. Somewhat more conservative, less swayed by one or
+            two large rank jumps. Reporting both gives a fuller picture than leaning on either alone.</dd>
+        </div>
+      </dl>
+      <p class="note">
+        Not the same as the <em>loss</em> numbers that appear in training curves (Huber + a pairwise ranking
+        loss) &mdash; those are what the model optimises <em>while</em> learning; Spearman and Kendall are how its
+        finished predictions get judged <em>afterward</em>. Related in spirit (the ranking loss directly targets
+        rank correctness, same as these metrics measure) but serving different purposes.
+      </p>
+    </div>
+  </div>
+
+  <!-- PHASE 0 -->
+  <section class="phase">
+    <div class="rail"><div class="num">0</div><div class="line"></div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Getting the tools working</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        Before writing any project code, every tool had to be installed and proven to work: <strong>OpenROAD</strong>,
+        the professional chip-design software this project builds on, running inside a Docker container so it
+        behaves identically regardless of the underlying machine; Python 3.11; and PyTorch + PyTorch Geometric,
+        the framework the neural network is built in.
+      </p>
+      <div class="result">
+        <div class="label">Confirmed</div>
+        <p>openroad -version runs &middot; torch + torch_geometric import cleanly &middot; CPU-only, no GPU required</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 1 -->
+  <section class="phase">
+    <div class="rail"><div class="num">1</div><div class="line"></div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Proving the baseline pipeline runs end-to-end</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        Ran a small, real, publicly available chip design (nicknamed &ldquo;gcd&rdquo;, about 600 components) through
+        the <em>entire</em> chip design pipeline &mdash; from logic synthesis all the way through to a fully routed
+        layout &mdash; completely unmodified. The goal was simply to prove the whole toolchain works before building
+        anything on top of it.
+      </p>
+      <div class="result">
+        <div class="label">Confirmed</div>
+        <p>Full flow completed in ~70 seconds &middot; produced the two files this project depends on most:
+        the placed-but-unrouted layout (the AI's future input) and the globally-routed layout (source of the
+        congestion data to predict)</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 2 -->
+  <section class="phase">
+    <div class="rail"><div class="num">2</div><div class="line"></div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Extracting the "ground truth" congestion data</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        A chip's surface is divided into a grid of small tiles for routing purposes, called <strong>GCells</strong>.
+        For each tile, the router knows how much wiring capacity is available versus how much is actually used.
+        That's exactly the signal the neural network needs to learn to predict, so a script was written to pull it
+        out of OpenROAD's internal database into a plain numeric array.
+      </p>
+      <p>
+        To make sure the numbers were actually right &mdash; not just plausible-looking &mdash; they were checked
+        against OpenROAD's own built-in congestion visualization for the identical chip.
+      </p>
+      <div class="result">
+        <div class="label">Confirmed</div>
+        <p>144/144 grid tiles matched OpenROAD's own display to within 0.000005% (floating-point noise)</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 3 -->
+  <section class="phase">
+    <div class="rail"><div class="num">3</div><div class="line"></div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Manufacturing a genuinely congested test case</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        A chip this small has far more wiring capacity than it needs, so it never naturally becomes congested &mdash;
+        not a useful example for training an AI to spot congestion. Four ways of deliberately provoking it were
+        tried, roughly in order of expected effect: restricting which metal layers wires are allowed to use,
+        packing components in more tightly, shrinking the chip's usable area, and physically blocking off a strip
+        of the chip from being wired through at all.
+      </p>
+      <p>
+        The first three, on their own or combined, made <em>no</em> meaningful difference &mdash; the router is good
+        enough to route around a shortage by using whatever room is left elsewhere. Only the explicit block forced
+        a genuine, unavoidable bottleneck.
+      </p>
+      <div class="result">
+        <div class="label">Result</div>
+        <p>64.4% of grid tiles pushed past 90% congestion &middot; peak demand 64% over capacity in the blocked strip</p>
+      </div>
+      <p class="aside">Worth stating plainly: this contradicts the naive assumption that restricting wiring layers alone would be the biggest lever &mdash; it wasn't, and that's a real finding, not an inconvenience to smooth over.</p>
+    </div>
+  </section>
+
+  <!-- PHASE 4 -->
+  <section class="phase">
+    <div class="rail"><div class="num">4</div><div class="line"></div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Turning the chip layout into the AI's input format</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        Graph neural networks operate on graphs, not images or tables &mdash; so the chip layout was converted into
+        one, with three kinds of nodes: <strong>components</strong>, <strong>wires</strong> (nets), and
+        <strong>grid tiles</strong> (GCells). Connections capture which components sit on which wires, which tile
+        each component physically sits in, which components are near each other, and which tiles neighbour each
+        other.
+      </p>
+      <p>
+        The resulting graph was then checked for structural mistakes &mdash; the kind that would silently sabotage
+        training later, like a wire connected to nothing, or a tile disconnected from the rest of the grid.
+      </p>
+      <div class="result">
+        <div class="label">Confirmed</div>
+        <p>606 component nodes &middot; 631 wire nodes &middot; 144 tile nodes<br>
+        0 wires with no component connected &middot; 0 tiles disconnected from their neighbours</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 5 -->
+  <section class="phase">
+    <div class="rail"><div class="num">5</div><div class="line"></div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Checking the AI's grid lines up exactly with the congestion data</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        Phase 4's grid tiles and Phase 2's congestion data are supposed to describe the exact same physical
+        squares on the chip &mdash; if tile #47 in one didn't mean the same physical location as tile #47 in the
+        other, every downstream prediction would be silently, invisibly wrong. This was flagged from the start as
+        the single likeliest place for a bug that produces plausible-looking nonsense rather than an obvious
+        crash, so it got two independent checks rather than one.
+      </p>
+      <p>
+        First, the exact arithmetic used to assign a component to a tile was checked against OpenROAD's own
+        internal version of that same calculation, for every component in the chip plus several deliberately
+        awkward edge cases (component sitting exactly on a tile boundary, in the odd-sized tile at the chip's
+        far edge, and so on). Second, component positions, tile boundaries, and the congestion heatmap were all
+        plotted together on one image, using a chip layout from Phase 3 that had an obvious congestion hotspot
+        &mdash; so a misalignment would be visually obvious, not something that could hide in a uniform chip.
+      </p>
+      <div class="result">
+        <div class="label">Confirmed</div>
+        <p>0 mismatches across 614 components + 6 boundary cases &middot; every component's real position falls inside its assigned tile &middot; the known hotspot lines up exactly with the tile rows it should</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 6 -->
+  <section class="phase">
+    <div class="rail"><div class="num">6</div><div class="line"></div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Building a small training set from varied layouts</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        A neural network needs more than one example to learn from. The plan was to take the same chip design and
+        re-run placement 30&ndash;50 times with three things varied each time &mdash; how tightly components are
+        packed, how much of the wiring is deliberately blocked off, and a random seed &mdash; so every run produces
+        a genuinely different layout with its own congestion pattern.
+      </p>
+      <p>
+        Two of those three levers turned out not to work as planned, and both were caught by checking the actual
+        numbers rather than trusting that "the script ran without an error" meant the data was good.
+      </p>
+      <div class="detour">
+        <div class="detour-label">False start 1</div>
+        <p>The first sweep varied packing density, wiring-layer restriction, and seed. 30 of the 45 runs it
+        produced turned out to have <em>byte-for-byte identical</em> congestion results despite genuinely
+        different component placements underneath &mdash; the layer restriction, it turned out, dominates the
+        result so completely that density and seed stop mattering once it's applied. Caught by comparing files
+        directly, not by eyeballing a chart.</p>
+      </div>
+      <div class="detour">
+        <div class="detour-label">False start 2</div>
+        <p>Swapped the layer restriction for something already proven to work in Phase 3 (an explicit wiring
+        blockage) and re-ran. This time packing density itself turned out to be the dead lever: every density
+        value from loosely-packed to tightly-packed produced the exact same final component positions, because
+        this chip has so much spare room that the density target never actually has to be honoured. Confirmed
+        directly by comparing raw component coordinates between runs, not just the congestion output.</p>
+      </div>
+      <p>
+        The working formula: the same proven wiring blockage, varied in <em>where</em> it sits and <em>how
+        wide</em> it is, crossed with 5 random placement seeds &mdash; both levers independently confirmed to
+        produce real, physically-sensible differences (a wider blockage reliably makes things more congested, not
+        less) before committing to the full run.
+      </p>
+      <div class="result">
+        <div class="label">Result</div>
+        <p>45/45 layout variations succeeded &middot; 0 duplicate congestion results (the false-start problem, fully resolved) &middot; every sample shows real overflow (peak demand 46&ndash;75% over capacity) &middot; wider blockage reliably means more congestion, in a clean straight-line relationship</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 7 -->
+  <section class="phase">
+    <div class="rail"><div class="num">7</div><div class="line"></div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Confirming the model can learn anything at all</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        Before trusting any real training run, a cheaper and more revealing test comes first: can the model
+        perfectly memorise a <em>single</em> example? If it can't, the problem isn't "needs more data" &mdash;
+        something upstream is broken (bad features, a mis-built graph, a buggy loss function), and no amount of
+        additional training will fix that. This is a deliberately narrow test, not an attempt to build a usable
+        predictor yet.
+      </p>
+      <p>
+        The network itself: each node type gets its own small entry layer, then three rounds of message-passing
+        where every node updates itself based on its neighbours (a different learned rule per connection type, so
+        "which wire is this component on" and "which components are nearby" get treated differently, as they
+        should), finishing with a small prediction head reading out two congestion numbers per grid tile. Trained
+        with the two losses mentioned above &mdash; Huber plus the pairwise ranking loss &mdash; on one
+        moderately-congested layout from Phase 6, chosen deliberately rather than picking the easiest case.
+      </p>
+      <div class="result">
+        <div class="label">Result</div>
+        <p>Spearman 0.970 (horizontal) / 0.981 (vertical) &middot; both comfortably above the 0.95 pass bar &middot; converged smoothly over ~350 training passes, no upstream debugging needed</p>
+      </div>
+      <p class="aside">The predicted and actual heatmaps for this one sample are visually almost indistinguishable &mdash; exactly what "memorised" should look like.</p>
+    </div>
+  </section>
+
+  <!-- PHASE 8 -->
+  <section class="phase">
+    <div class="rail"><div class="num">8</div></div>
+    <div class="phase-body">
+      <div class="phase-head">
+        <h2 class="phase-title">Building a viewer to see the results</h2>
+        <span class="pill">Complete</span>
+      </div>
+      <p>
+        A small interactive app: pick any of the 45 layouts, see predicted congestion next to the real thing on a
+        shared colour scale plus a signed error map, read off Spearman/Kendall scores, and click into the 20 most
+        congested tiles for a close-up comparison.
+      </p>
+      <p>
+        The app is upfront about a real limitation rather than hiding it: the model behind it is the Phase 7
+        one &mdash; trained on exactly one layout. Switching the viewer to any of the other 44 samples shows
+        that honestly: Spearman drops from ~0.97 on the training sample to roughly 0.4&ndash;0.5 elsewhere, which
+        is the expected, unsurprising result of training on a single example with no chance to learn what
+        actually generalises. Training a model that works well <em>across</em> layouts would be a real next step,
+        not something this phase claims to have done.
+      </p>
+      <div class="result">
+        <div class="label">Confirmed</div>
+        <p>Re-prediction time: 26.8&nbsp;ms (gate required under 1,000&nbsp;ms) &middot; app verified to run with zero errors, including after switching samples, using Streamlit's own automated testing tool</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="next">
+    <h2>Optional next steps (beyond the original 8-phase plan)</h2>
+    <div class="next-grid">
+      <div class="next-item">
+        <span class="tag">Real training</span>
+        <p>Train a model across all 45 layouts (rather than just one) with a proper train/validation split, to
+        get an honest read on how well this can actually generalise &mdash; the open question Phase 8's viewer
+        deliberately exposes rather than answers.</p>
+      </div>
+      <div class="next-item">
+        <span class="tag">Angular viewer</span>
+        <p>Rebuild the Phase 8 viewer as an Angular front-end talking to a small Python API server, instead of
+        Streamlit &mdash; a bigger lift (two services instead of one file) than the current viewer, parked as a
+        stretch goal.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>All work above is pipeline validation on a deliberately tiny design chosen to run in seconds &mdash; it is not
+    a benchmark result and isn't being reported as one. The same scripts are built to scale up to the full
+    CircuitNet benchmark once the pipeline itself is proven end-to-end.</p>
+    <p>Every phase is version-controlled with a written note explaining what was tried, what worked, and what
+    didn't &mdash; available on request.</p>
+  </footer>
+
+</div>
+</body>
+</html>
