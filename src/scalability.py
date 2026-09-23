@@ -182,7 +182,7 @@ def cmd_prepare(args):
 
 
 def run_repeated(mode, n, budget_bytes, repeats):
-    """Peak memory varies run to run (measured ~+-15% - multithreaded
+    """Peak memory varies run to run (measured, likely multithreaded
     allocation/free timing), so each point is `repeats` fresh processes:
     median reported, all peaks kept. Any repeat over budget -> the point is
     recorded as exceeded_budget (its median is unknown)."""

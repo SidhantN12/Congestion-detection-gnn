@@ -118,7 +118,7 @@ killed runs are all marked.
   cells here. Consistent with that, the inference fit predicts 7.5 GiB at
   1.5M cells, and that run was indeed killed above 5.5 GiB.
 - **Run-to-run spread is real**, not measurement error. The high-water
-  mark is kernel-exact; the variation comes from PyTorch's multithreaded
+  mark is kernel-exact. The likely cause (a hypothesis, not verified) is PyTorch's multithreaded
   allocation/free timing.
   - Within one batch of 3, the worst spread was 34% (`fwd_bwd` at 50K)
     and 25% at ≥200K (`fwd_grad` at 200K: 1.76 / 2.27 / 2.33 GiB).
