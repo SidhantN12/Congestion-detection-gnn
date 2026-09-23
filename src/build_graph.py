@@ -42,7 +42,27 @@ def gcell_index(x, y, origin_x, origin_y, pitch_x, pitch_y, nx, ny):
     return xi, yi
 
 
-def build_graph(placement, congestion):
+def knn_dense(x, y, k):
+    """k nearest neighbours by center distance, as a (2, n*k) edge array.
+
+    Materialises the full n x n distance matrix - O(n^2) memory, fine for
+    the ~600-cell toy designs, not for CircuitNet scale (see
+    synthetic.knn_tiled for the scalable equivalent).
+    """
+    n = len(x)
+    diff_x = x[:, None] - x[None, :]
+    diff_y = y[:, None] - y[None, :]
+    dist_sq = diff_x ** 2 + diff_y ** 2
+    np.fill_diagonal(dist_sq, np.inf)
+    k_eff = min(k, n - 1)
+    nn_idx = np.argpartition(dist_sq, k_eff, axis=1)[:, :k_eff]
+    src = np.repeat(np.arange(n), k_eff)
+    dst = nn_idx.reshape(-1)
+    return np.stack([src, dst])
+
+
+def build_graph(placement, congestion, knn_fn=knn_dense):
+    """knn_fn(x, y, k) -> (2, n*k) edge array for the cell-near-cell relation."""
     site_w, site_h = float(placement["site_w"]), float(placement["site_h"])
     die_w, die_h = float(placement["die_w"]), float(placement["die_h"])
 
@@ -115,16 +135,7 @@ def build_graph(placement, congestion):
     gcell_contains_cell = np.stack([cell_gcell_flat, np.arange(n_cells)])
 
     # ---- edges: cell <-> cell (k=8 nearest neighbor, geometric) ----
-    k = 8
-    diff_x = cell_x[:, None] - cell_x[None, :]
-    diff_y = cell_y[:, None] - cell_y[None, :]
-    dist_sq = diff_x ** 2 + diff_y ** 2
-    np.fill_diagonal(dist_sq, np.inf)
-    k_eff = min(k, n_cells - 1)
-    nn_idx = np.argpartition(dist_sq, k_eff, axis=1)[:, :k_eff]
-    src = np.repeat(np.arange(n_cells), k_eff)
-    dst = nn_idx.reshape(-1)
-    cell_near_cell = np.stack([src, dst])
+    cell_near_cell = knn_fn(cell_x, cell_y, 8)
 
     # ---- edges: gcell <-> gcell (4-connected) ----
     gx, gy = np.meshgrid(np.arange(nx), np.arange(ny))

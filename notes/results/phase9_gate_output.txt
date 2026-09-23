@@ -1,0 +1,47 @@
+=== Nodes ===
+                                   35K          100K          500K          1.5M
+cell                            35,000       100,000       500,000     1,500,000
+net                             36,444       104,125       520,627     1,561,881
+gcell                           15,376        44,100       219,024       656,100
+total                           86,820       248,225     1,239,651     3,717,981
+gcell grid (ny x nx)           124x124       210x210       468x468       810x810
+
+=== Edges ===
+                                   35K          100K          500K          1.5M
+cell-pin-net                   167,397       467,991     2,377,958     7,277,098
+net-rev_pin-cell               167,397       467,991     2,377,958     7,277,098
+cell-in-gcell                   35,000       100,000       500,000     1,500,000
+gcell-contains-cell             35,000       100,000       500,000     1,500,000
+cell-near-cell                 280,000       800,000     4,000,000    12,000,000
+gcell-adjacent-gcell            61,008       175,560       874,224     2,621,160
+total                          745,802     2,111,542    10,630,140    32,175,356
+
+=== Net degree (pins per net) ===
+                                   35K          100K          500K          1.5M
+max                              3,572        10,176        50,128       150,085
+mean                              4.59          4.49          4.57          4.66
+median                               3             3             3             3
+% nets with 1 pin                 3.3%          3.2%          3.2%          3.2%
+% nets with 2 pins               28.5%         28.5%         28.5%         28.4%
+% nets with 3-4 pins             48.8%         49.0%         49.0%         48.9%
+# nets >= 1000 pins                  5             5            21            61
+pins on >=1000-pin nets           5.4%          3.4%          4.5%          6.0%
+
+=== Spatial clustering (cells per gcell) ===
+                                   35K          100K          500K          1.5M
+mean                              2.28          2.27          2.28          2.29
+var/mean (Poisson=1)              2.59          2.49          3.30          3.37
+% empty gcells                   26.3%         25.2%         30.4%         31.2%
+max gcell cell_density            7.24          7.60         12.97         11.22
+cells with 0 pins                  298           945         4,194        11,462
+
+=== Construction time and memory (macOS proc_pid_rusage ri_lifetime_max_phys_footprint) ===
+                                   35K          100K          500K          1.5M
+placement gen (s)                 0.04          0.12          1.05          3.79
+build_graph (s)                   1.34          3.62         21.13         65.37
+baseline (MiB)                     252           253           251           250
+peak (MiB)                         404           405           880          2150
+peak - baseline (MiB)              152           153           630          1900
+graph tensors (MiB)                 13            37           184           557
+
+Wrote notes/figures/phase9_net_degree_loglog.png
