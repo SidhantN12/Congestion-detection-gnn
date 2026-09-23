@@ -241,8 +241,8 @@ def plot(by, fits, budget):
     ax.set_ylabel("peak memory (GB)")
     ax.grid(True, color=GRID, lw=1)
     ax.set_axisbelow(True)
-    ax.set_title("Full-graph CongestionGNN runs out of memory well inside CircuitNet's size range",
-                 loc="left", fontsize=18, pad=14)
+    ax.set_title("Full-graph training step: measured to 500K cells, reaches 12 GB at ~1.1M (extrapolated)",
+                 loc="left", fontsize=17, pad=14)
     fig.text(0.01, 0.01, "Measured on CPU (Apple M1, 8 GB), synthetic graphs, peak physical footprint. "
              "GPU memory not measured. GB = GiB (2^30 bytes).", color=INK2, fontsize=11)
     fig.subplots_adjust(left=0.07, right=0.82, top=0.90, bottom=0.12)
