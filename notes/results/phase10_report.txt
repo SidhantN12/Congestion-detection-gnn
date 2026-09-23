@@ -1,0 +1,50 @@
+# Phase 10 scalability - measured results
+Memory: macOS proc_pid_rusage ri_lifetime_max_phys_footprint; peaks are medians of 3 fresh processes.
+torch threads: 4. Runs killed when footprint > 5.5 GiB (8 GB machine).
+
+| cells | nodes | edges | graph tensors (MiB) | .pt file (MiB) | build time (s) | build peak (GiB) | inference fwd peak (GiB) | inference fwd time (s) | train fwd peak (GiB) | train fwd+bwd peak (GiB) | fwd+bwd time (s) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 10,000 | 24,902 | 221,262 | 4 | 4 | 0.32 | 0.31 | 0.28 | 0.08 | 0.28 | 0.28 | 0.12 |
+| 20,000 | 49,661 | 426,186 | 7 | 7 | 0.78 | 0.37 | 0.30 | 0.14 | 0.33 | 0.32 | 0.25 |
+| 35,000 | 86,820 | 745,802 | 13 | 13 | 1.41 | 0.39 | 0.37 | 0.29 | 0.39 | 0.38 | 0.46 |
+| 50,000 | 124,264 | 1,072,090 | 19 | 19 | 2.18 | 0.43 | 0.40 | 0.41 | 0.45 | 0.48 | 0.90 |
+| 100,000 | 248,225 | 2,111,542 | 37 | 37 | 3.75 | 0.39 | 0.62 | 0.95 | 0.79 | 1.15 | 1.82 |
+| 200,000 | 495,867 | 4,224,540 | 73 | 73 | 8.71 | 0.60 | 1.05 | 2.47 | 2.27 | 2.26 | 4.66 |
+| 350,000 | 868,103 | 7,408,386 | 129 | 129 | 17.08 | 0.81 | 1.88 | 5.50 | 3.89 | 3.89 | 9.20 |
+| 500,000 | 1,239,651 | 10,630,140 | 184 | 184 | 22.70 | 0.86 | 2.64 | 8.07 | 5.45 | 5.45 | 15.56 |
+| 750,000 | 1,859,270 | 15,986,408 | 277 | 277 | 33.22 | 1.16 | 3.83 | 11.32 | >5.5 (killed) | >5.5 (killed) | >5.5 (killed) |
+| 1,000,000 | 2,479,498 | 21,316,812 | 370 | 370 | 44.20 | 1.48 | 5.01 | 16.72 | - | - | - |
+| 1,500,000 | 3,717,981 | 32,175,356 | 557 | - | 70.56 | 2.13 | >5.5 (killed) | >5.5 (killed) | - | - | - |
+
+Runs whose overall peak was set during graph load, not the forward pass: none
+
+## Run-to-run spread (min-max of 3 repeats, GiB)
+  fwd_nograd  worst spread 8% of median (at 50,000 cells); worst at >= 200,000 cells: 4%
+  fwd_grad    worst spread 25% of median (at 200,000 cells); worst at >= 200,000 cells: 25%
+  fwd_bwd     worst spread 34% of median (at 50,000 cells); worst at >= 200,000 cells: 3%
+  build_tiled worst spread 11% of median (at 350,000 cells); worst at >= 200,000 cells: 11%
+
+## Linear fits, peak = a + b*cells, on measured points with cells >= 200,000
+  fwd_nograd  points=5 (200,000-1,000,000)  a=0.130 GiB  b=5.15 KiB/cell  R^2=0.9992  max residual 5.7%
+              held-out: fit without 1,000,000 predicts it within +1.9%
+              -> 12 GiB crossover at ~2,415,300 cells (~51.4M edges at the measured 21.27 edges/cell); at 1.5M cells: 7.5 GiB  [EXTRAPOLATED]
+  fwd_grad    points=3 (200,000-500,000)  a=0.162 GiB  b=11.12 KiB/cell  R^2=0.9999  max residual 0.5%
+              held-out: fit without 500,000 predicts it within +1.0%
+              -> 12 GiB crossover at ~1,116,708 cells (~23.8M edges at the measured 21.27 edges/cell); at 1.5M cells: 16.1 GiB  [EXTRAPOLATED]
+  fwd_bwd     points=3 (200,000-500,000)  a=0.144 GiB  b=11.15 KiB/cell  R^2=0.9998  max residual 0.7%
+              held-out: fit without 500,000 predicts it within +1.4%
+              -> 12 GiB crossover at ~1,114,995 cells (~23.7M edges at the measured 21.27 edges/cell); at 1.5M cells: 16.1 GiB  [EXTRAPOLATED]
+  build_tiled points=6 (200,000-1,500,000)  a=0.337 GiB  b=1.22 KiB/cell  R^2=0.9916  max residual 8.0%
+              held-out: fit without 1,500,000 predicts it within -6.5%
+              -> 12 GiB crossover at ~9,997,510 cells (~212.7M edges at the measured 21.27 edges/cell); at 1.5M cells: 2.1 GiB  [EXTRAPOLATED]
+
+## O(n^2) components, peak = a + c*n^2 on all measured points
+  build_dense points=6 (2,000-12,000 cells)  c=32.1 B/cell^2  R^2=1.0000  max residual 0.2%  killed at 15,000 cells
+              largest that fits 12 GiB: ~19,826 cells
+              at 35,000 cells (smallest CircuitNet-scale design): 37 GiB  [EXTRAPOLATED]
+              at 1,500,000 cells (largest): 67,273 GiB  [EXTRAPOLATED]
+  rank_loss   points=4 (1,000-6,000 gcells)  c=90.3 B/gcell^2  R^2=0.9930  max residual 21.7%  killed at 8,000 gcells
+              largest that fits 12 GiB: ~11,847 gcells
+              at 15,376 gcells (gcells in the 35K-cell synthetic design): 20 GiB  [EXTRAPOLATED]
+              at 656,100 gcells (gcells in the 1.5M-cell synthetic design): 36,214 GiB  [EXTRAPOLATED]
+

@@ -1,0 +1,1418 @@
+[
+ {
+  "mode": "build_dense",
+  "cells": 2000,
+  "torch_threads": 4,
+  "time_s": 0.056654083000466926,
+  "graph_tensor_bytes": 945236,
+  "nodes": 4983,
+  "edges": 53214,
+  "baseline_bytes": 264653504,
+  "peak_bytes": 394906560,
+  "peak_minus_baseline_bytes": 129843456,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.599034415998176,
+  "peaks_bytes": [
+   388484032,
+   394906560,
+   396643264
+  ],
+  "times_s": [
+   0.05921124999804306,
+   0.05635966699992423,
+   0.056654083000466926
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_dense",
+  "cells": 4000,
+  "torch_threads": 4,
+  "time_s": 0.19597354199868278,
+  "graph_tensor_bytes": 1682828,
+  "nodes": 10014,
+  "edges": 93354,
+  "baseline_bytes": 265112640,
+  "peak_bytes": 778309696,
+  "peak_minus_baseline_bytes": 513197056,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.7091555000006338,
+  "peaks_bytes": [
+   780258944,
+   777031360,
+   778309696
+  ],
+  "times_s": [
+   0.19545975000073668,
+   0.19628137499967124,
+   0.19597354199868278
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_dense",
+  "cells": 6000,
+  "torch_threads": 4,
+  "time_s": 0.4476991670017014,
+  "graph_tensor_bytes": 2482480,
+  "nodes": 14952,
+  "edges": 137560,
+  "baseline_bytes": 266308352,
+  "peak_bytes": 1422578560,
+  "peak_minus_baseline_bytes": 1156057280,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.970168542000465,
+  "peaks_bytes": [
+   1423659968,
+   1422578560,
+   1418318656
+  ],
+  "times_s": [
+   0.4720069160030107,
+   0.4476991670017014,
+   0.44763637500000186
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_dense",
+  "cells": 8000,
+  "torch_threads": 4,
+  "time_s": 1.278819040999224,
+  "graph_tensor_bytes": 3206280,
+  "nodes": 19930,
+  "edges": 176944,
+  "baseline_bytes": 264653376,
+  "peak_bytes": 2322504128,
+  "peak_minus_baseline_bytes": 2057850752,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.807035249999899,
+  "peaks_bytes": [
+   2320767616,
+   2323044992,
+   2322504128
+  ],
+  "times_s": [
+   1.1877054590004263,
+   1.3465625000026193,
+   1.278819040999224
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_dense",
+  "cells": 10000,
+  "torch_threads": 4,
+  "time_s": 2.5955874169994786,
+  "graph_tensor_bytes": 4008812,
+  "nodes": 24902,
+  "edges": 221262,
+  "baseline_bytes": 264751808,
+  "peak_bytes": 3477463872,
+  "peak_minus_baseline_bytes": 3212498944,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 4.2334831670013955,
+  "peaks_bytes": [
+   3478004288,
+   3477463872,
+   3477250752
+  ],
+  "times_s": [
+   2.765773082999658,
+   2.35707554200053,
+   2.5955874169994786
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_dense",
+  "cells": 12000,
+  "torch_threads": 4,
+  "time_s": 3.3413975420007773,
+  "graph_tensor_bytes": 4784292,
+  "nodes": 29824,
+  "edges": 263988,
+  "baseline_bytes": 264194752,
+  "peak_bytes": 4888194368,
+  "peak_minus_baseline_bytes": 4623999616,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 4.884591832997103,
+  "peaks_bytes": [
+   4888538496,
+   4887506240,
+   4888194368
+  ],
+  "times_s": [
+   3.5960585419998097,
+   3.3413975420007773,
+   3.295525749999797
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_dense",
+  "cells": 15000,
+  "wall_s": 2.9238365829987742,
+  "max_polled_bytes": 5937951936,
+  "budget_bytes": 5905580032,
+  "status": "exceeded_budget",
+  "stderr_tail": null,
+  "ok_peaks_bytes": []
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 10000,
+  "torch_threads": 4,
+  "time_s": 0.3180902500025695,
+  "graph_tensor_bytes": 4008812,
+  "nodes": 24902,
+  "edges": 221262,
+  "baseline_bytes": 266046144,
+  "peak_bytes": 329960320,
+  "peak_minus_baseline_bytes": 63914176,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.8495710409988533,
+  "peaks_bytes": [
+   330222336,
+   329960320,
+   329321344
+  ],
+  "times_s": [
+   0.3392212919970916,
+   0.3180473329994129,
+   0.3180902500025695
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 20000,
+  "torch_threads": 4,
+  "time_s": 0.7770822499987844,
+  "graph_tensor_bytes": 7751644,
+  "nodes": 49661,
+  "edges": 426186,
+  "baseline_bytes": 264522560,
+  "peak_bytes": 400985600,
+  "peak_minus_baseline_bytes": 136070016,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.2841316250014643,
+  "peaks_bytes": [
+   401051136,
+   399838656,
+   400985600
+  ],
+  "times_s": [
+   0.7770822499987844,
+   0.7753182499982358,
+   0.7771923340005742
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 35000,
+  "torch_threads": 4,
+  "time_s": 1.4065205420010898,
+  "graph_tensor_bytes": 13562208,
+  "nodes": 86820,
+  "edges": 745802,
+  "baseline_bytes": 265538368,
+  "peak_bytes": 416943552,
+  "peak_minus_baseline_bytes": 151323328,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.9719565420018625,
+  "peaks_bytes": [
+   416943552,
+   422776448,
+   413961856
+  ],
+  "times_s": [
+   1.4065205420010898,
+   1.452836374999606,
+   1.3773996669988264
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 50000,
+  "torch_threads": 4,
+  "time_s": 2.1751763749998645,
+  "graph_tensor_bytes": 19488644,
+  "nodes": 124264,
+  "edges": 1072090,
+  "baseline_bytes": 265325376,
+  "peak_bytes": 461246592,
+  "peak_minus_baseline_bytes": 196068864,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 3.725903209000535,
+  "peaks_bytes": [
+   461213824,
+   461246592,
+   463622656
+  ],
+  "times_s": [
+   2.1751763749998645,
+   2.1288045830006013,
+   2.1829365829980816
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 100000,
+  "torch_threads": 4,
+  "time_s": 3.7459845839985064,
+  "graph_tensor_bytes": 38445388,
+  "nodes": 248225,
+  "edges": 2111542,
+  "baseline_bytes": 265866112,
+  "peak_bytes": 422399552,
+  "peak_minus_baseline_bytes": 155730816,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 5.283355457999278,
+  "peaks_bytes": [
+   420547968,
+   422579968,
+   422399552
+  ],
+  "times_s": [
+   3.714684957998543,
+   3.760012209000706,
+   3.7459845839985064
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 200000,
+  "torch_threads": 4,
+  "time_s": 8.712995374997263,
+  "graph_tensor_bytes": 76895380,
+  "nodes": 495867,
+  "edges": 4224540,
+  "baseline_bytes": 263047872,
+  "peak_bytes": 640635584,
+  "peak_minus_baseline_bytes": 376703040,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 10.49416116700013,
+  "peaks_bytes": [
+   642077376,
+   637686784,
+   640635584
+  ],
+  "times_s": [
+   8.602645916002075,
+   8.983749541002908,
+   8.712995374997263
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 350000,
+  "torch_threads": 4,
+  "time_s": 17.077207750000525,
+  "graph_tensor_bytes": 134824708,
+  "nodes": 868103,
+  "edges": 7408386,
+  "baseline_bytes": 263735936,
+  "peak_bytes": 869881408,
+  "peak_minus_baseline_bytes": 605506496,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 18.824950791000447,
+  "peaks_bytes": [
+   869881408,
+   877106624,
+   782439808
+  ],
+  "times_s": [
+   17.077207750000525,
+   16.875843874997372,
+   17.179971999998088
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 500000,
+  "torch_threads": 4,
+  "time_s": 22.697617542002263,
+  "graph_tensor_bytes": 193338548,
+  "nodes": 1239651,
+  "edges": 10630140,
+  "baseline_bytes": 262146752,
+  "peak_bytes": 923719104,
+  "peak_minus_baseline_bytes": 661900096,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 24.77591908300019,
+  "peaks_bytes": [
+   903255616,
+   939808640,
+   923719104
+  ],
+  "times_s": [
+   22.697617542002263,
+   24.553976415998477,
+   22.2209061249996
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 750000,
+  "torch_threads": 4,
+  "time_s": 33.21549729099934,
+  "graph_tensor_bytes": 290660364,
+  "nodes": 1859270,
+  "edges": 15986408,
+  "baseline_bytes": 264440448,
+  "peak_bytes": 1248205376,
+  "peak_minus_baseline_bytes": 983912192,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 35.10213954199935,
+  "peaks_bytes": [
+   1248205376,
+   1225267648,
+   1271159424
+  ],
+  "times_s": [
+   33.21549729099934,
+   33.02584179100086,
+   33.36252791699735
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 1000000,
+  "torch_threads": 4,
+  "time_s": 44.20318354199844,
+  "graph_tensor_bytes": 387587864,
+  "nodes": 2479498,
+  "edges": 21316812,
+  "baseline_bytes": 263621184,
+  "peak_bytes": 1591074560,
+  "peak_minus_baseline_bytes": 1327453376,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 46.17602920900026,
+  "peaks_bytes": [
+   1609490432,
+   1583652608,
+   1591074560
+  ],
+  "times_s": [
+   44.20318354199844,
+   44.116909082997154,
+   44.375609832997725
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "build_tiled",
+  "cells": 1500000,
+  "torch_threads": 4,
+  "time_s": 70.56239020900102,
+  "graph_tensor_bytes": 584543484,
+  "nodes": 3717981,
+  "edges": 32175356,
+  "baseline_bytes": 263588416,
+  "peak_bytes": 2284872704,
+  "peak_minus_baseline_bytes": 2021825024,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 72.59438745800071,
+  "peaks_bytes": [
+   2260820928,
+   2285413440,
+   2284872704
+  ],
+  "times_s": [
+   71.67498370900284,
+   69.53752645900022,
+   70.56239020900102
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 10000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 4008812,
+  "graph_file_bytes": 4013895,
+  "nodes": 24902,
+  "edges": 221262,
+  "peak_after_load_bytes": 297929600,
+  "time_s": 0.12131612500161282,
+  "out_shape": [
+   4489,
+   2
+  ],
+  "baseline_bytes": 266832704,
+  "peak_bytes": 305040448,
+  "peak_minus_baseline_bytes": 38207744,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.7459038330016483,
+  "peaks_bytes": [
+   311774400,
+   305040448,
+   301812544
+  ],
+  "times_s": [
+   0.16643895800007158,
+   0.12131612500161282,
+   0.11930874999961816
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 20000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 7751644,
+  "graph_file_bytes": 7756807,
+  "nodes": 49661,
+  "edges": 426186,
+  "peak_after_load_bytes": 298764992,
+  "time_s": 0.2474876249980298,
+  "out_shape": [
+   8836,
+   2
+  ],
+  "baseline_bytes": 270289920,
+  "peak_bytes": 347475456,
+  "peak_minus_baseline_bytes": 77185536,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.8624242080004478,
+  "peaks_bytes": [
+   348228864,
+   344624064,
+   347475456
+  ],
+  "times_s": [
+   0.2474876249980298,
+   0.2523932089970913,
+   0.2446715830010362
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 35000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 13562208,
+  "graph_file_bytes": 13567431,
+  "nodes": 86820,
+  "edges": 745802,
+  "peak_after_load_bytes": 300485440,
+  "time_s": 0.4629839590015763,
+  "out_shape": [
+   15376,
+   2
+  ],
+  "baseline_bytes": 267914112,
+  "peak_bytes": 409194048,
+  "peak_minus_baseline_bytes": 141181760,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.0733569159965555,
+  "peaks_bytes": [
+   406523520,
+   413453888,
+   409194048
+  ],
+  "times_s": [
+   0.4620861250004964,
+   0.4629839590015763,
+   0.5217666249991453
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 50000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 19488644,
+  "graph_file_bytes": 19493831,
+  "nodes": 124264,
+  "edges": 1072090,
+  "peak_after_load_bytes": 303385280,
+  "time_s": 0.8957389590032108,
+  "out_shape": [
+   22201,
+   2
+  ],
+  "baseline_bytes": 273091264,
+  "peak_bytes": 517115904,
+  "peak_minus_baseline_bytes": 234259712,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.592881208001927,
+  "peaks_bytes": [
+   482775040,
+   517115904,
+   660049728
+  ],
+  "times_s": [
+   0.9989791669977421,
+   0.866084959001455,
+   0.8957389590032108
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 100000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 38445388,
+  "graph_file_bytes": 38450521,
+  "nodes": 248225,
+  "edges": 2111542,
+  "peak_after_load_bytes": 299617024,
+  "time_s": 1.8211735829972895,
+  "out_shape": [
+   44100,
+   2
+  ],
+  "baseline_bytes": 284724096,
+  "peak_bytes": 1234638016,
+  "peak_minus_baseline_bytes": 949913920,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 3.478456582997751,
+  "peaks_bytes": [
+   1146967168,
+   1234638016,
+   1279104128
+  ],
+  "times_s": [
+   1.874039124999399,
+   1.8211735829972895,
+   1.7843950829992536
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 200000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 76895380,
+  "graph_file_bytes": 76900633,
+  "nodes": 495867,
+  "edges": 4224540,
+  "peak_after_load_bytes": 300698240,
+  "time_s": 4.655899124998541,
+  "out_shape": [
+   87616,
+   2
+  ],
+  "baseline_bytes": 300174272,
+  "peak_bytes": 2423971008,
+  "peak_minus_baseline_bytes": 2123796736,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 6.336303041000065,
+  "peaks_bytes": [
+   2476088576,
+   2402262272,
+   2423971008
+  ],
+  "times_s": [
+   4.717359292000765,
+   4.6325098750021425,
+   4.655899124998541
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 350000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 134824708,
+  "graph_file_bytes": 134829977,
+  "nodes": 868103,
+  "edges": 7408386,
+  "peak_after_load_bytes": 376425728,
+  "time_s": 9.19548654099708,
+  "out_shape": [
+   153664,
+   2
+  ],
+  "baseline_bytes": 375737280,
+  "peak_bytes": 4177979776,
+  "peak_minus_baseline_bytes": 3803422080,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 11.127214250001998,
+  "peaks_bytes": [
+   4096273088,
+   4177979776,
+   4179159360
+  ],
+  "times_s": [
+   9.71858470799998,
+   8.266955999999482,
+   9.19548654099708
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 500000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 193338548,
+  "graph_file_bytes": 193343769,
+  "nodes": 1239651,
+  "edges": 10630140,
+  "peak_after_load_bytes": 415321216,
+  "time_s": 15.560847042001114,
+  "out_shape": [
+   219024,
+   2
+  ],
+  "baseline_bytes": 425626688,
+  "peak_bytes": 5849282048,
+  "peak_minus_baseline_bytes": 5422360960,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 18.0383390829993,
+  "peaks_bytes": [
+   5850003072,
+   5812860544,
+   5849282048
+  ],
+  "times_s": [
+   14.329053416000534,
+   15.560847042001114,
+   16.680455749999965
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_bwd",
+  "cells": 750000,
+  "wall_s": 11.48838241699923,
+  "max_polled_bytes": 6016252416,
+  "budget_bytes": 5905580032,
+  "status": "exceeded_budget",
+  "stderr_tail": null,
+  "ok_peaks_bytes": []
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 10000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 4008812,
+  "graph_file_bytes": 4013895,
+  "nodes": 24902,
+  "edges": 221262,
+  "peak_after_load_bytes": 299092672,
+  "time_s": 0.06590529200184392,
+  "out_shape": [
+   4489,
+   2
+  ],
+  "baseline_bytes": 266635968,
+  "peak_bytes": 301091776,
+  "peak_minus_baseline_bytes": 33161152,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.6728578749971348,
+  "peaks_bytes": [
+   301091776,
+   299764288,
+   301321152
+  ],
+  "times_s": [
+   0.06648591700286488,
+   0.06428691700057243,
+   0.06590529200184392
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 20000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 7751644,
+  "graph_file_bytes": 7756807,
+  "nodes": 49661,
+  "edges": 426186,
+  "peak_after_load_bytes": 300616320,
+  "time_s": 0.13308075000168174,
+  "out_shape": [
+   8836,
+   2
+  ],
+  "baseline_bytes": 267668288,
+  "peak_bytes": 349523264,
+  "peak_minus_baseline_bytes": 79315456,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.758689582999068,
+  "peaks_bytes": [
+   367496384,
+   338595072,
+   349523264
+  ],
+  "times_s": [
+   0.13453587500043795,
+   0.13308075000168174,
+   0.12929649999932735
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 35000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 13562208,
+  "graph_file_bytes": 13567431,
+  "nodes": 86820,
+  "edges": 745802,
+  "peak_after_load_bytes": 303041216,
+  "time_s": 0.26552470800015726,
+  "out_shape": [
+   15376,
+   2
+  ],
+  "baseline_bytes": 276204480,
+  "peak_bytes": 418926144,
+  "peak_minus_baseline_bytes": 145539904,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.9370965410016652,
+  "peaks_bytes": [
+   418926144,
+   411127104,
+   424365696
+  ],
+  "times_s": [
+   0.2668941249976342,
+   0.26552470800015726,
+   0.24936404099935316
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 50000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 19488644,
+  "graph_file_bytes": 19493831,
+  "nodes": 124264,
+  "edges": 1072090,
+  "peak_after_load_bytes": 299600832,
+  "time_s": 0.3823951250014943,
+  "out_shape": [
+   22201,
+   2
+  ],
+  "baseline_bytes": 274664256,
+  "peak_bytes": 482987968,
+  "peak_minus_baseline_bytes": 204522432,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.9881492080021417,
+  "peaks_bytes": [
+   469913536,
+   483037120,
+   482987968
+  ],
+  "times_s": [
+   0.3823951250014943,
+   0.3829625409998698,
+   0.37899233300049673
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 100000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 38445388,
+  "graph_file_bytes": 38450521,
+  "nodes": 248225,
+  "edges": 2111542,
+  "peak_after_load_bytes": 298961536,
+  "time_s": 0.8796480829987559,
+  "out_shape": [
+   44100,
+   2
+  ],
+  "baseline_bytes": 274008832,
+  "peak_bytes": 843224128,
+  "peak_minus_baseline_bytes": 566052992,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.4995480420002423,
+  "peaks_bytes": [
+   843224128,
+   855446592,
+   839832768
+  ],
+  "times_s": [
+   0.9337298750033369,
+   0.8796480829987559,
+   0.8559377500023402
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 200000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 76895380,
+  "graph_file_bytes": 76900633,
+  "nodes": 495867,
+  "edges": 4224540,
+  "peak_after_load_bytes": 301566848,
+  "time_s": 2.208123542000976,
+  "out_shape": [
+   87616,
+   2
+  ],
+  "baseline_bytes": 293243648,
+  "peak_bytes": 2440010944,
+  "peak_minus_baseline_bytes": 2147389504,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 3.914686542000709,
+  "peaks_bytes": [
+   2440010944,
+   1891146944,
+   2499845248
+  ],
+  "times_s": [
+   2.208123542000976,
+   2.0378945829979784,
+   2.2378654169988295
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 350000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 134824708,
+  "graph_file_bytes": 134829977,
+  "nodes": 868103,
+  "edges": 7408386,
+  "peak_after_load_bytes": 384535488,
+  "time_s": 4.63526945799822,
+  "out_shape": [
+   153664,
+   2
+  ],
+  "baseline_bytes": 374983744,
+  "peak_bytes": 4178110784,
+  "peak_minus_baseline_bytes": 3803700480,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 6.446505166997667,
+  "peaks_bytes": [
+   4012108096,
+   4178110784,
+   4178684224
+  ],
+  "times_s": [
+   5.547202083002048,
+   4.279205999999249,
+   4.63526945799822
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 500000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 193338548,
+  "graph_file_bytes": 193343769,
+  "nodes": 1239651,
+  "edges": 10630140,
+  "peak_after_load_bytes": 412748928,
+  "time_s": 10.186861000001954,
+  "out_shape": [
+   219024,
+   2
+  ],
+  "baseline_bytes": 414075904,
+  "peak_bytes": 5854836288,
+  "peak_minus_baseline_bytes": 5438794304,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 12.848158542001329,
+  "peaks_bytes": [
+   5855049280,
+   5852870208,
+   5854836288
+  ],
+  "times_s": [
+   14.98981412500143,
+   10.186861000001954,
+   9.00198654199994
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_grad",
+  "cells": 750000,
+  "wall_s": 9.605820625001797,
+  "max_polled_bytes": 5913377216,
+  "budget_bytes": 5905580032,
+  "status": "exceeded_budget",
+  "stderr_tail": null,
+  "ok_peaks_bytes": []
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 10000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 4008812,
+  "graph_file_bytes": 4013895,
+  "nodes": 24902,
+  "edges": 221262,
+  "peak_after_load_bytes": 300911488,
+  "time_s": 0.0807057909987634,
+  "out_shape": [
+   4489,
+   2
+  ],
+  "baseline_bytes": 267307968,
+  "peak_bytes": 301009728,
+  "peak_minus_baseline_bytes": 33603520,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.6993177910007944,
+  "peaks_bytes": [
+   300911488,
+   301009728,
+   302271424
+  ],
+  "times_s": [
+   0.08139104200017755,
+   0.0807057909987634,
+   0.0699018330014951
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 20000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 7751644,
+  "graph_file_bytes": 7756807,
+  "nodes": 49661,
+  "edges": 426186,
+  "peak_after_load_bytes": 301796032,
+  "time_s": 0.1398277500011318,
+  "out_shape": [
+   8836,
+   2
+  ],
+  "baseline_bytes": 266717952,
+  "peak_bytes": 318229440,
+  "peak_minus_baseline_bytes": 51511488,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.7481438750000962,
+  "peaks_bytes": [
+   314526656,
+   318229440,
+   332696512
+  ],
+  "times_s": [
+   0.15523845799907576,
+   0.1398277500011318,
+   0.13697933299772558
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 35000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 13562208,
+  "graph_file_bytes": 13567431,
+  "nodes": 86820,
+  "edges": 745802,
+  "peak_after_load_bytes": 303418176,
+  "time_s": 0.2934491669984709,
+  "out_shape": [
+   15376,
+   2
+  ],
+  "baseline_bytes": 276319168,
+  "peak_bytes": 398118144,
+  "peak_minus_baseline_bytes": 119832960,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.9490874170005554,
+  "peaks_bytes": [
+   400247936,
+   398118144,
+   383012032
+  ],
+  "times_s": [
+   0.2934491669984709,
+   0.2903344170008495,
+   0.31664475000070524
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 50000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 19488644,
+  "graph_file_bytes": 19493831,
+  "nodes": 124264,
+  "edges": 1072090,
+  "peak_after_load_bytes": 298339008,
+  "time_s": 0.41457125000306405,
+  "out_shape": [
+   22201,
+   2
+  ],
+  "baseline_bytes": 266996416,
+  "peak_bytes": 429624640,
+  "peak_minus_baseline_bytes": 153420352,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.0319772089969774,
+  "peaks_bytes": [
+   455724352,
+   420416768,
+   429624640
+  ],
+  "times_s": [
+   0.46882595799979754,
+   0.41457125000306405,
+   0.40099799999734387
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 100000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 38445388,
+  "graph_file_bytes": 38450521,
+  "nodes": 248225,
+  "edges": 2111542,
+  "peak_after_load_bytes": 300075712,
+  "time_s": 0.9510809579987836,
+  "out_shape": [
+   44100,
+   2
+  ],
+  "baseline_bytes": 285854400,
+  "peak_bytes": 669012032,
+  "peak_minus_baseline_bytes": 387236992,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.6148029579999275,
+  "peaks_bytes": [
+   661180352,
+   669012032,
+   677253056
+  ],
+  "times_s": [
+   1.036305875000835,
+   0.9484469160015578,
+   0.9510809579987836
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 200000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 76895380,
+  "graph_file_bytes": 76900633,
+  "nodes": 495867,
+  "edges": 4224540,
+  "peak_after_load_bytes": 300026880,
+  "time_s": 2.4661074579998967,
+  "out_shape": [
+   87616,
+   2
+  ],
+  "baseline_bytes": 306973632,
+  "peak_bytes": 1130501312,
+  "peak_minus_baseline_bytes": 821217536,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 4.22334950000004,
+  "peaks_bytes": [
+   1118687936,
+   1165038208,
+   1130501312
+  ],
+  "times_s": [
+   2.416097125002125,
+   2.4661074579998967,
+   2.6034336669981712
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 350000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 134824708,
+  "graph_file_bytes": 134829977,
+  "nodes": 868103,
+  "edges": 7408386,
+  "peak_after_load_bytes": 408014144,
+  "time_s": 5.501082916001906,
+  "out_shape": [
+   153664,
+   2
+  ],
+  "baseline_bytes": 371330240,
+  "peak_bytes": 2019236544,
+  "peak_minus_baseline_bytes": 1647939200,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 7.320007500002248,
+  "peaks_bytes": [
+   1989008000,
+   2019236544,
+   2062080384
+  ],
+  "times_s": [
+   5.501082916001906,
+   4.749508542001422,
+   5.642172208001284
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 500000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 193338548,
+  "graph_file_bytes": 193343769,
+  "nodes": 1239651,
+  "edges": 10630140,
+  "peak_after_load_bytes": 427445184,
+  "time_s": 8.068425666999246,
+  "out_shape": [
+   219024,
+   2
+  ],
+  "baseline_bytes": 427445184,
+  "peak_bytes": 2832572608,
+  "peak_minus_baseline_bytes": 2404357184,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 10.28028699999777,
+  "peaks_bytes": [
+   2827133120,
+   2832572608,
+   2833375488
+  ],
+  "times_s": [
+   8.256082874999265,
+   7.440508124996995,
+   8.068425666999246
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 750000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 290660364,
+  "graph_file_bytes": 290665625,
+  "nodes": 1859270,
+  "edges": 15986408,
+  "peak_after_load_bytes": 523504896,
+  "time_s": 11.321358459001203,
+  "out_shape": [
+   328329,
+   2
+  ],
+  "baseline_bytes": 525602048,
+  "peak_bytes": 4107299392,
+  "peak_minus_baseline_bytes": 3581697344,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 13.451942166997469,
+  "peaks_bytes": [
+   4106693248,
+   4107299392,
+   4108331584
+  ],
+  "times_s": [
+   13.052494249997835,
+   11.299623749997409,
+   11.321358459001203
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 1000000,
+  "torch_threads": 4,
+  "graph_tensor_bytes": 387587864,
+  "graph_file_bytes": 387593067,
+  "nodes": 2479498,
+  "edges": 21316812,
+  "peak_after_load_bytes": 615337344,
+  "time_s": 16.717944667001575,
+  "out_shape": [
+   438244,
+   2
+  ],
+  "baseline_bytes": 615337344,
+  "peak_bytes": 5382583488,
+  "peak_minus_baseline_bytes": 4767311680,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 18.971092750001844,
+  "peaks_bytes": [
+   5384696704,
+   5382256000,
+   5382583488
+  ],
+  "times_s": [
+   16.717944667001575,
+   27.737906708000082,
+   16.61940345900075
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "fwd_nograd",
+  "cells": 1500000,
+  "wall_s": 7.28926487499848,
+  "max_polled_bytes": 5994281024,
+  "budget_bytes": 5905580032,
+  "status": "exceeded_budget",
+  "stderr_tail": null,
+  "ok_peaks_bytes": []
+ },
+ {
+  "mode": "rank_loss",
+  "cells": 1000,
+  "torch_threads": 4,
+  "time_s": 0.031615415999112884,
+  "baseline_bytes": 291703488,
+  "peak_bytes": 380013504,
+  "peak_minus_baseline_bytes": 88424640,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.7507093750027707,
+  "peaks_bytes": [
+   380013504,
+   377473984,
+   382438528
+  ],
+  "times_s": [
+   0.06849249999868334,
+   0.031615415999112884,
+   0.02987224999742466
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "rank_loss",
+  "cells": 2000,
+  "torch_threads": 4,
+  "time_s": 0.09883295800318592,
+  "baseline_bytes": 291998592,
+  "peak_bytes": 588385984,
+  "peak_minus_baseline_bytes": 296403776,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 1.818978875002358,
+  "peaks_bytes": [
+   590171712,
+   584666624,
+   588385984
+  ],
+  "times_s": [
+   0.09883295800318592,
+   0.09597437499905936,
+   0.09924008300004061
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "rank_loss",
+  "cells": 4000,
+  "torch_threads": 4,
+  "time_s": 0.3356674579990795,
+  "baseline_bytes": 290933312,
+  "peak_bytes": 1475908992,
+  "peak_minus_baseline_bytes": 1184893696,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.043526457997359,
+  "peaks_bytes": [
+   1474909760,
+   1475908992,
+   1476482496
+  ],
+  "times_s": [
+   0.33551320799961104,
+   0.3356674579990795,
+   0.3392113750014687
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "rank_loss",
+  "cells": 6000,
+  "torch_threads": 4,
+  "time_s": 0.9357863330005785,
+  "baseline_bytes": 291195648,
+  "peak_bytes": 3532890944,
+  "peak_minus_baseline_bytes": 3241695296,
+  "memory_method": "macOS proc_pid_rusage ri_lifetime_max_phys_footprint",
+  "status": "ok",
+  "wall_s": 2.635383750002802,
+  "peaks_bytes": [
+   3531236224,
+   3533284288,
+   3532890944
+  ],
+  "times_s": [
+   1.3065189169974474,
+   0.9357863330005785,
+   0.9101675839992822
+  ],
+  "repeats": 3
+ },
+ {
+  "mode": "rank_loss",
+  "cells": 8000,
+  "wall_s": 3.2052817500007222,
+  "max_polled_bytes": 5915375040,
+  "budget_bytes": 5905580032,
+  "status": "exceeded_budget",
+  "stderr_tail": null,
+  "ok_peaks_bytes": []
+ }
+]
