@@ -124,6 +124,15 @@ def worker(mode, n):
 
 def run_one(mode, n, budget_bytes, poll_s=0.02):
     cmd = [sys.executable, os.path.abspath(__file__), "_worker", mode, str(n)]
+    result = run_cmd(cmd, budget_bytes, poll_s)
+    result.setdefault("mode", mode)
+    result.setdefault("cells", n)
+    return result
+
+
+def run_cmd(cmd, budget_bytes, poll_s=0.02):
+    """Run a worker command that prints one 'RESULT {json}' line, SIGKILLing
+    it if its physical footprint exceeds budget_bytes."""
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     max_seen, killed = 0, False
     t0 = time.perf_counter()
@@ -147,7 +156,7 @@ def run_one(mode, n, budget_bytes, poll_s=0.02):
             result["status"] = "ok"
             result["wall_s"] = wall
             return result
-    return dict(mode=mode, cells=n, wall_s=wall, max_polled_bytes=max_seen,
+    return dict(wall_s=wall, max_polled_bytes=max_seen,
                 budget_bytes=budget_bytes,
                 status="exceeded_budget" if killed else "error",
                 stderr_tail=None if killed else stderr[-2000:])

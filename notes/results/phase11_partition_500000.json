@@ -1,0 +1,112 @@
+{
+ "plan": {
+  "budget_gib": 2.0,
+  "degree_cap": 512,
+  "k": 2,
+  "n_parts": 4,
+  "capped_nets": 21,
+  "plan_time_s": 0.36824779200105695,
+  "build_time_s": 0.7502541659996496,
+  "parts": [
+   {
+    "part": 0,
+    "core_gcells": 55692,
+    "edges": 2800055,
+    "nodes": {
+     "cell": 141778,
+     "net": 135212,
+     "gcell": 57111
+    },
+    "est_peak_bytes": 1679510770.2152002
+   },
+   {
+    "part": 1,
+    "core_gcells": 55692,
+    "edges": 2824481,
+    "nodes": {
+     "cell": 142480,
+     "net": 135131,
+     "gcell": 57111
+    },
+    "est_peak_bytes": 1692571352.4152
+   },
+   {
+    "part": 2,
+    "core_gcells": 51750,
+    "edges": 2738402,
+    "nodes": {
+     "cell": 133791,
+     "net": 133001,
+     "gcell": 53118
+    },
+    "est_peak_bytes": 1646544911.1152
+   },
+   {
+    "part": 3,
+    "core_gcells": 55890,
+    "edges": 2822086,
+    "nodes": {
+     "cell": 140959,
+     "net": 134686,
+     "gcell": 57312
+    },
+    "est_peak_bytes": 1691290745.9152
+   }
+  ]
+ },
+ "measure": {
+  "budget_bytes": 5905580032,
+  "parts": [
+   {
+    "time_s": 2.837078125005064,
+    "peak_bytes": 1500026880,
+    "baseline_bytes": 319425344,
+    "nodes": 334101,
+    "edges": 2800055,
+    "core_gcells": 55692,
+    "status": "ok",
+    "wall_s": 4.429232665999734,
+    "part": "part_000.pt"
+   },
+   {
+    "time_s": 2.8373039579964825,
+    "peak_bytes": 1602951168,
+    "baseline_bytes": 316148608,
+    "nodes": 334722,
+    "edges": 2824481,
+    "core_gcells": 55692,
+    "status": "ok",
+    "wall_s": 4.425830459003919,
+    "part": "part_001.pt"
+   },
+   {
+    "time_s": 2.4696647910022875,
+    "peak_bytes": 1633294144,
+    "baseline_bytes": 317262784,
+    "nodes": 319910,
+    "edges": 2738402,
+    "core_gcells": 51750,
+    "status": "ok",
+    "wall_s": 4.042156750001595,
+    "part": "part_002.pt"
+   },
+   {
+    "time_s": 2.483295541998814,
+    "peak_bytes": 1740347328,
+    "baseline_bytes": 319835008,
+    "nodes": 332957,
+    "edges": 2822086,
+    "core_gcells": 55890,
+    "status": "ok",
+    "wall_s": 4.018422749999445,
+    "part": "part_003.pt"
+   }
+  ],
+  "largest_part": "part_001.pt",
+  "largest_repeats": [
+   1602951168,
+   1743869888,
+   1777964928
+  ]
+ }
+}
