@@ -1,0 +1,51 @@
+{
+ "config": {
+  "name": "synthetic_smoke",
+  "seed": 0,
+  "out_dir": "runs",
+  "data": {
+   "source": "synthetic",
+   "manifest": "",
+   "cache_dir": "data/processed/datasets",
+   "synthetic": {
+    "n_designs": 8,
+    "cells_min": 3000,
+    "cells_max": 6000,
+    "variants": 3,
+    "variant_sigma": 2.0
+   }
+  },
+  "split": {
+   "val_frac": 0.25,
+   "test_frac": 0.125,
+   "val_designs": [],
+   "test_designs": []
+  },
+  "model": {
+   "hidden_dim": 64,
+   "num_layers": 3
+  },
+  "partition": {
+   "enabled": true,
+   "budget_gib": 0.2,
+   "degree_cap": 512
+  },
+  "train": {
+   "epochs": 6,
+   "lr": 0.001,
+   "weight_decay": 0.0,
+   "accum_steps": 2,
+   "lambda_rank": 0.5,
+   "rank_pairs": 20000,
+   "grad_clip": 1.0,
+   "amp": "auto",
+   "device": "auto",
+   "deterministic": true
+  },
+  "early_stopping": {
+   "patience": 3,
+   "min_delta": 0.0
+  }
+ },
+ "hash": "1bc20763f3de"
+}

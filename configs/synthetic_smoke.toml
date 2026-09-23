@@ -1,0 +1,34 @@
+# Phase 13 gate: short end-to-end run on synthetic designs (CPU, minutes).
+# Everything not listed takes the default in src/config.py.
+name = "synthetic_smoke"
+seed = 0
+
+[data]
+source = "synthetic"
+
+[data.synthetic]
+n_designs = 8          # 8 netlists ...
+cells_min = 3000
+cells_max = 6000
+variants = 3           # ... x 3 placements each = 24 samples
+
+[split]                # by design: 8 -> 5 train / 2 val / 1 test
+val_frac = 0.25
+test_frac = 0.125
+
+[partition]
+enabled = true
+budget_gib = 0.2       # deliberately tiny so these small designs still get
+                       # partitioned and the partition path is exercised
+
+[train]
+epochs = 6
+lr = 1e-3
+accum_steps = 2
+lambda_rank = 0.5
+rank_pairs = 20000
+grad_clip = 1.0
+amp = "auto"           # cpu -> fp32; see resolve_amp in src/train.py
+
+[early_stopping]
+patience = 3

@@ -112,9 +112,16 @@ def generate_placement(n_cells, seed=0, *, utilization=0.70, flop_frac=0.10,
                        net_ratio=631 / 606, cluster_size=4000,
                        cluster_peak_util=1.0, background_frac=0.20,
                        tail_alpha=2.5, tail_max=500, hub_every=25_000,
-                       hub_min=1000, locality=2.0, overflow_frac=0.10):
+                       hub_min=1000, locality=2.0, overflow_frac=0.10,
+                       variant=0, variant_sigma=2.0):
     """Synthesise one placed design. Returns (placement, congestion) dicts
-    in the extract_placement.py / extract_congestion.py .npz schema."""
+    in the extract_placement.py / extract_congestion.py .npz schema.
+
+    `variant` > 0 gives another placement of the *same design* (identical
+    cells and netlist; every cell displaced by Gaussian noise with sigma =
+    variant_sigma gcell pitches, from an independent RNG stream) - the
+    synthetic analogue of Phase 6's placement-seed sweep. variant=0 is the
+    base placement, bit-identical to the pre-variant generator."""
     rng = np.random.default_rng(seed)
     n = int(n_cells)
 
@@ -202,6 +209,16 @@ def generate_placement(n_cells, seed=0, *, utilization=0.70, flop_frac=0.10,
     net_fanout = np.bincount(edge_net_idx, minlength=n_nets)
     assert (net_fanout > 0).all()
     net_start = np.concatenate([[0], np.cumsum(net_fanout)[:-1]])
+
+    if variant:
+        vrng = np.random.default_rng([seed, variant])
+        sigma_dbu = variant_sigma * GCELL_PITCH
+        x = cell_x + sigma_dbu * vrng.standard_normal(n)
+        y = cell_y + sigma_dbu * vrng.standard_normal(n)
+        x = np.clip(np.abs(die_w - np.abs(die_w - np.abs(x))), 0, die_w - cell_w)
+        y = np.clip(np.abs(die_h - np.abs(die_h - np.abs(y))), 0, die_h - SITE_H)
+        cell_x = (np.floor(x / SITE_W) * SITE_W).astype(np.int64)
+        cell_y = (np.floor(y / SITE_H) * SITE_H).astype(np.int64)
 
     pin_x = cell_x[edge_cell_idx] + cell_w[edge_cell_idx] // 2
     pin_y = cell_y[edge_cell_idx] + SITE_H // 2
