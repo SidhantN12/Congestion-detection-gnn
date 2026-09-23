@@ -1,0 +1,304 @@
+{
+ "eval": {
+  "35000": {
+   "n_gcells": 15376,
+   "grid": [
+    124,
+    124
+   ],
+   "model_shape": [
+    15376,
+    2
+   ],
+   "model_dtype": "torch.float32",
+   "model_path": "model(data)",
+   "rudy": {
+    "time_s": 0.03503712500241818,
+    "shape": [
+     15376,
+     2
+    ],
+    "dtype": "torch.float32",
+    "shape_matches_model": true,
+    "finite": true,
+    "spearman": [
+     0.8912205836739571,
+     0.8611242720307588
+    ],
+    "spearman_avg_ties": [
+     0.8912205815120384,
+     0.8611242605432486
+    ],
+    "frac_tied_pred": [
+     0.0016259105098855864,
+     0.0015608740894901274
+    ],
+    "combined_congestion_shape": [
+     124,
+     124
+    ],
+    "fraction_above_0_9": 0.0479318418314256,
+    "label_fraction_above_0_9": 0.18645941727367327,
+    "kendall_subsample_2000": [
+     0.7289762638409519,
+     0.6944592713253513
+    ]
+   },
+   "density": {
+    "time_s": 0.005439041000499856,
+    "shape": [
+     15376,
+     2
+    ],
+    "dtype": "torch.float32",
+    "shape_matches_model": true,
+    "finite": true,
+    "spearman": [
+     0.8903026086240395,
+     0.8986588092267317
+    ],
+    "spearman_avg_ties": [
+     0.8903025815575983,
+     0.8986587880021788
+    ],
+    "frac_tied_pred": [
+     0.0008454734651405227,
+     0.00045525494276799083
+    ],
+    "combined_congestion_shape": [
+     124,
+     124
+    ],
+    "fraction_above_0_9": 0.11856139438085328,
+    "label_fraction_above_0_9": 0.18645941727367327,
+    "kendall_subsample_2000": [
+     0.6993717349258526,
+     0.7147854649114577
+    ]
+   }
+  },
+  "100000": {
+   "n_gcells": 44100,
+   "grid": [
+    210,
+    210
+   ],
+   "model_shape": [
+    44100,
+    2
+   ],
+   "model_dtype": "torch.float32",
+   "model_path": "model(data)",
+   "rudy": {
+    "time_s": 0.045538833997852635,
+    "shape": [
+     44100,
+     2
+    ],
+    "dtype": "torch.float32",
+    "shape_matches_model": true,
+    "finite": true,
+    "spearman": [
+     0.9088962926813297,
+     0.8933423726939499
+    ],
+    "spearman_avg_ties": [
+     0.9088962895904861,
+     0.893342384089891
+    ],
+    "frac_tied_pred": [
+     0.0017913832199546453,
+     0.001972789115646245
+    ],
+    "combined_congestion_shape": [
+     210,
+     210
+    ],
+    "fraction_above_0_9": 0.04793650793650794,
+    "label_fraction_above_0_9": 0.18160997732426304,
+    "kendall_subsample_2000": [
+     0.7444205825016351,
+     0.7236488671702581
+    ]
+   },
+   "density": {
+    "time_s": 0.0060656250061583705,
+    "shape": [
+     44100,
+     2
+    ],
+    "dtype": "torch.float32",
+    "shape_matches_model": true,
+    "finite": true,
+    "spearman": [
+     0.8824088876630698,
+     0.8876561543387236
+    ],
+    "spearman_avg_ties": [
+     0.8824088842433455,
+     0.8876561455118417
+    ],
+    "frac_tied_pred": [
+     0.001678004535147437,
+     0.0016553287981859732
+    ],
+    "combined_congestion_shape": [
+     210,
+     210
+    ],
+    "fraction_above_0_9": 0.11043083900226758,
+    "label_fraction_above_0_9": 0.18160997732426304,
+    "kendall_subsample_2000": [
+     0.6929688308999521,
+     0.7036972004489127
+    ]
+   }
+  },
+  "1500000": {
+   "n_gcells": 656100,
+   "grid": [
+    810,
+    810
+   ],
+   "model_shape": [
+    656100,
+    2
+   ],
+   "model_dtype": "torch.float32",
+   "model_path": "reference_forward",
+   "rudy": {
+    "time_s": 0.8921892080034013,
+    "shape": [
+     656100,
+     2
+    ],
+    "dtype": "torch.float32",
+    "shape_matches_model": true,
+    "finite": true,
+    "spearman": [
+     0.9381375615528604,
+     0.9206917607583859
+    ],
+    "spearman_avg_ties": [
+     0.938137561820104,
+     0.9206917607553585
+    ],
+    "frac_tied_pred": [
+     0.01376162170400852,
+     0.013793629019966502
+    ],
+    "combined_congestion_shape": [
+     810,
+     810
+    ],
+    "fraction_above_0_9": 0.0459122085048011,
+    "label_fraction_above_0_9": 0.16635726261240666,
+    "kendall_subsample_2000": [
+     0.7796975436962584,
+     0.7641137479024122
+    ]
+   },
+   "density": {
+    "time_s": 0.07724720899568638,
+    "shape": [
+     656100,
+     2
+    ],
+    "dtype": "torch.float32",
+    "shape_matches_model": true,
+    "finite": true,
+    "spearman": [
+     0.908144051911822,
+     0.9147687736532363
+    ],
+    "spearman_avg_ties": [
+     0.9081440526982222,
+     0.9147687732551001
+    ],
+    "frac_tied_pred": [
+     0.025313214449016908,
+     0.024432251181222386
+    ],
+    "combined_congestion_shape": [
+     810,
+     810
+    ],
+    "fraction_above_0_9": 0.1667687852461515,
+    "label_fraction_above_0_9": 0.16635726261240666,
+    "kendall_subsample_2000": [
+     0.7207370487086391,
+     0.7348060867449172
+    ]
+   }
+  }
+ },
+ "kendall": [
+  {
+   "n": 2000,
+   "time_s": 0.052450041999691166,
+   "peak_bytes": 279022208,
+   "baseline_bytes": 148851072,
+   "status": "ok",
+   "wall_s": 1.0358920829967246
+  },
+  {
+   "n": 4000,
+   "time_s": 0.20179662499867845,
+   "peak_bytes": 669846976,
+   "baseline_bytes": 149358848,
+   "status": "ok",
+   "wall_s": 0.8700328339982661
+  },
+  {
+   "n": 8000,
+   "time_s": 0.8808841249992838,
+   "peak_bytes": 2484329216,
+   "baseline_bytes": 146835584,
+   "status": "ok",
+   "wall_s": 1.5351645839982666
+  },
+  {
+   "wall_s": 2.226114332996076,
+   "max_polled_bytes": 5916259456,
+   "budget_bytes": 5905580032,
+   "status": "exceeded_budget",
+   "stderr_tail": null,
+   "n": 15376
+  }
+ ],
+ "density_fit": {
+  "train": "35K cells, seeds 1,2,3",
+  "time_s": 4.210232166995411,
+  "n_gcells": 46128,
+  "weight": [
+   [
+    0.21281689928696917,
+    0.1846722338456456
+   ],
+   [
+    -0.02891597437830595,
+    -0.03175638704707144
+   ],
+   [
+    0.05581636647128702,
+    0.04540785116830283
+   ],
+   [
+    -0.008399257128225354,
+    0.010796207445463335
+   ],
+   [
+    0.03840188524535683,
+    0.060784905128841715
+   ],
+   [
+    0.48289443904064827,
+    0.45932822279576074
+   ],
+   [
+    -0.018367361152155582,
+    0.0032245417050914124
+   ]
+  ]
+ }
+}
