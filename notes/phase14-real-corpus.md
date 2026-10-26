@@ -526,3 +526,110 @@ data/raw/corpus data/processed/corpus`; table: `src/corpus_report.py`.
 Unattended-run hardening: every `rm` in `flow/*.sh` uses `${VAR:?}`
 form (an unset variable aborts the command instead of widening its
 target).
+
+## Gate 2: the corpus (12 runs)
+
+`bash flow/sweep_corpus.sh` (recipe above), 2026-10-26 20:50-22:34,
+sequential. **12 of 12 runs OK, no step-back needed, no failures.**
+Hash check after the first two dynamic_node variants passed (u40_s1
+`3198914e...`, 85x85; u55_s2 `cf0e9a7a...`, 73x73).
+
+Reproducibility: dynamic_node u40_s1 (full flow, GPL seed 1 = the ORFS
+default) is bit-identical in demand, capacity and ratio to k5b (GRT-only
+metal2-5 re-run on g1's placement), so the full flow and the GRT-only
+clone path agree exactly.
+
+Table (`src/corpus_report.py data/raw/corpus logs`): cells and nets are
+the placed design (after buffering/resizing), "> 0.9 H/V" per channel,
+"== 1.0" and IQR on the combined max(H, V) map, distinct = number of
+distinct ratio values (combined / H / V). Times in seconds: synth,
+floorplan -> GRT, the 5_1_grt step alone (reference_router_seconds),
+total.
+
+| sample | cells | nets | grid | max H / V | > 0.9 H | > 0.9 V | == 1.0 | IQR comb | distinct comb / H / V | synth s | place->GRT s | GRT step s | total s |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| aes__u45_s1 | 14,524 | 15,021 | 65x65 | 1.0000 / 1.0000 | 428 (10.13%) | 1527 (36.14%) | 586 (13.87%) | 0.2292 | 95 / 61 / 41 | 101 | 227 | 52 | 328 |
+| aes__u60_s2 | 14,120 | 14,662 | 56x56 | 1.0000 / 1.0000 | 806 (25.70%) | 1449 (46.21%) | 676 (21.56%) | 0.1267 | 94 / 69 / 45 | 98 | 219 | 54 | 317 |
+| aes__u70_s3 | 13,826 | 14,388 | 52x52 | 1.0000 / 1.0000 | 1301 (48.11%) | 1832 (67.75%) | 1396 (51.63%) | 0.0800 | 98 / 69 / 49 | 103 | 257 | 84 | 361 |
+| dynamic_node__u40_s1 | 12,977 | 15,171 | 85x85 | 1.0000 / 1.0000 | 109 (1.51%) | 364 (5.04%) | 78 (1.08%) | 0.2267 | 84 / 55 / 36 | 22 | 382 | 83 | 404 |
+| dynamic_node__u55_s2 | 12,787 | 15,041 | 73x73 | 1.0000 / 1.0000 | 230 (4.32%) | 305 (5.72%) | 81 (1.52%) | 0.1731 | 88 / 58 / 37 | 19 | 402 | 93 | 421 |
+| dynamic_node__u65_s3 | 12,703 | 14,987 | 67x67 | 1.0000 / 1.0000 | 149 (3.32%) | 434 (9.67%) | 105 (2.34%) | 0.2000 | 84 / 58 / 34 | 20 | 368 | 97 | 388 |
+| ibex__u50_s1 | 14,620 | 16,850 | 83x83 | 1.0000 / 1.0000 | 247 (3.59%) | 675 (9.80%) | 131 (1.90%) | 0.2246 | 86 / 56 / 41 | 138 | 271 | 107 | 408 |
+| ibex__u65_s2 | 14,560 | 16,842 | 73x73 | 1.0000 / 1.0000 | 515 (9.66%) | 1042 (19.55%) | 244 (4.58%) | 0.2077 | 91 / 59 / 41 | 136 | 277 | 118 | 413 |
+| ibex__u75_s3 | 14,536 | 16,843 | 68x68 | 1.0000 / 1.0000 | 713 (15.42%) | 1246 (26.95%) | 380 (8.22%) | 0.1867 | 97 / 64 / 43 | 126 | 271 | 118 | 397 |
+| tinyRocket__u60_s1 | 28,587 | 33,712 | 106x106 | 1.0000 / 1.0000 | 1725 (15.35%) | 2617 (23.29%) | 995 (8.86%) | 0.2000 | 93 / 70 / 33 | 120 | 583 | 185 | 704 |
+| tinyRocket__u75_s2 | 28,437 | 33,628 | 95x95 | 1.1333 / 1.0800 | 3302 (36.59%) | 5117 (56.70%) | 1966 (21.78%) | 0.0867 | 82 / 56 / 33 | 139 | 847 | 295 | 985 |
+| tinyRocket__u85_s3 | 28,219 | 33,446 | 89x89 | 1.3871 / 1.4800 | 5248 (66.25%) | 6259 (79.02%) | 2244 (28.33%) | 0.0800 | 143 / 94 / 71 | 120 | 893 | 385 | 1012 |
+
+Router first pass (its own per-layer table, `-verbose`): 0 overflow on
+10 of 12 runs. **tinyRocket u75_s2 overflows (total 47) and u85_s3
+overflows heavily (total 5,872, 87.28% usage)**; their ratios exceed 1.0
+(max 1.1333 / 1.0800 and 1.3871 / 1.4800). These are kept: the labels
+are what the router reports with `-allow_congestion`.
+
+Checks the brief asks for:
+
+- **Duplicates: 0.** 12 samples, 12 distinct congestion maps (sha256 of
+  the ratio array).
+- **Failures: none.**
+- **Designs that did not congest: none.** Every sample has >= 109 GCells
+  > 0.9 in each channel.
+- **Do the levers move congestion? Utilisation does, strongly, for three
+  of four designs.** Fraction > 0.9 rises monotonically with utilisation
+  on aes (H 10.1 -> 25.7 -> 48.1%, V 36.1 -> 46.2 -> 67.8%), ibex (H 3.6
+  -> 9.7 -> 15.4%, V 9.8 -> 19.6 -> 27.0%) and tinyRocket (H 15.4 ->
+  36.6 -> 66.3%, V 23.3 -> 56.7 -> 79.0%). dynamic_node barely moves and
+  not monotonically (H 1.5 -> 4.3 -> 3.3%, V 5.0 -> 5.7 -> 9.7%). Unlike
+  Phase 6 on gcd, the placements and maps all differ. **Seed and
+  utilisation change together in every variant**, so their effects are
+  not separable from this corpus.
+- **Distinct values: 82-143 combined per sample (H 55-94, V 33-71)**,
+  vs 163-199 on the Gate 1 maps and 188 on the uncapped 78% run, so the
+  capped labels are more heavily tied (why the cap reduces the count was
+  not investigated). Spearman on this corpus must use midranks
+  (`metrics.spearman_corr` since 8c2f0e9); the size of the difference
+  from the old argsort-order ranking was not measured on these maps.
+
+**Concern for the user (not acted on): the high-utilisation variants of
+aes and tinyRocket saturate.** aes u70_s3 has 51.6% of GCells at exactly
+1.0 and IQR 0.080; tinyRocket u85_s3 28.3% at 1.0, 66-79% of GCells
+> 0.9 per channel. On those samples the hotspot set S is most of the
+map, so threshold hotspot precision/recall is near-trivial there, and
+the tie mass at 1.0 limits what Spearman can resolve. A per-design
+metal cap (e.g. no cap for aes/tinyRocket) or lower utilisation offsets
+for them would spread the corpus more evenly; the recipe was left
+uniform as agreed.
+
+Graph cache: `data/processed/corpus/` (12 graphs + manifest.json, 69 MB,
+not tracked). Rebuild: `bash flow/sweep_corpus.sh` (runs + graphs +
+table), or graphs alone from existing raw files:
+`python src/build_dataset.py data/raw/corpus data/processed/corpus`.
+
+## Gate 3: smoke training on the corpus
+
+`python src/train.py --config configs/corpus_smoke.toml` (CPU, 4 epochs,
+explicit design split: train dynamic_node + tinyRocket, val ibex, test
+aes; 6 / 3 / 3 samples):
+
+start corpus_smoke [82425ad4c8db] device=cpu amp=auto on cpu -> fp32; designs train/val/test = 2/1/1, samples 6/3/3, 6 train units
+epoch   0  train loss 0.2504 (huber 0.2371, rank 0.0265)  val spearman 0.0379 (H -0.0581 V 0.1338)  *best*  7.9s
+epoch   1  train loss 0.0622 (huber 0.0586, rank 0.0072)  val spearman 0.1726 (H 0.2524 V 0.0928)  *best*  6.8s
+epoch   2  train loss 0.0200 (huber 0.0175, rank 0.0050)  val spearman 0.3037 (H 0.3684 V 0.2390)  *best*  6.8s
+epoch   3  train loss 0.0223 (huber 0.0202, rank 0.0041)  val spearman 0.4011 (H 0.3931 V 0.4090)  *best*  6.9s
+final: best epoch 3 val spearman 0.4011; test spearman 0.3000 (H 0.4377 V 0.1622) on 3 samples
+
+First epoch train loss 0.2504, last (epoch 3) 0.0223; lowest 0.0200 at
+epoch 2. Val Spearman rises every epoch (0.0379 -> 0.4011). Test
+Spearman 0.3000 (H 0.4377, V 0.1622) on aes, a design never seen in
+training. Four epochs is a smoke test, not a result.
+
+Split rejection (`python tests/phase14_split_check.py`):
+
+[1] split from configs/corpus_smoke.toml
+    train designs=['dynamic_node', 'tinyRocket'] samples=6 ['u40_s1', 'u55_s2', 'u60_s1', 'u65_s3', 'u75_s2', 'u85_s3']
+    val   designs=['ibex'] samples=3 ['u50_s1', 'u65_s2', 'u75_s3']
+    test  designs=['aes'] samples=3 ['u45_s1', 'u60_s2', 'u70_s3']
+    12 of 12 samples assigned, 0 in more than one split
+[2] load_config with ibex in val and test -> ValueError: a design cannot be in both val and test
+[3] split_designs with ibex in val and test -> AssertionError: design in both val and test
+PASS
