@@ -2,6 +2,7 @@
 #   uv pip install torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu
 #   uv pip install torch_geometric==2.8.0.post1 numpy==2.4.6 matplotlib
 #   uv pip install streamlit==1.62.0
+#   uv pip install fastapi==0.162.0 uvicorn==0.53.0 httpx==0.28.1
 #
 # Python: 3.11.16 (installed via `uv python install 3.11`, since WSL Ubuntu 26.04's
 # system Python is 3.14 and has no python3.11 apt package yet)
@@ -13,3 +14,8 @@ torch_geometric==2.8.0.post1
 numpy==2.4.6
 matplotlib==3.11.1
 streamlit==1.62.0
+
+# Gate 1 backend: FastAPI app (api/) plus its test client dependency.
+fastapi==0.162.0
+uvicorn==0.53.0
+httpx==0.28.1

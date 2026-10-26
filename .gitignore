@@ -2,8 +2,10 @@ __pycache__/
 *.pyc
 data/raw/*
 data/processed/*
+data/stub/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/stub/.gitkeep
 .ipynb_checkpoints/
 *.egg-info/
 runs/
