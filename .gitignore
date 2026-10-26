@@ -7,3 +7,4 @@ data/processed/*
 .ipynb_checkpoints/
 *.egg-info/
 runs/
+logs/

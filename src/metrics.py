@@ -42,6 +42,74 @@ def spearman_corr(pred, target):
     return float(np.corrcoef(pred_rank, target_rank)[0, 1])
 
 
+def _avg_rank(x):
+    """Ranks 0..n-1 with tied values sharing their average rank."""
+    x = np.asarray(x, dtype=np.float64)
+    order = np.argsort(x, kind="stable")
+    r = np.empty(len(x))
+    r[order] = np.arange(len(x))
+    uniq = np.unique(x, return_inverse=True, return_counts=True)
+    inv = uniq[1]
+    counts = uniq[2]
+    sums = np.bincount(inv, weights=r)
+    return sums[inv] / counts[inv]
+
+
+def hotspot_detection(pred, target, threshold=0.9):
+    """Threshold-based hotspot detection for ONE channel (1D arrays).
+
+    S = {gcells with target >= threshold}. The model's hotspot set is its
+    top-|S| gcells by predicted value. Returns precision and recall of that
+    set against S, and ROC-AUC of `pred` as a score for membership in S
+    over the whole map.
+
+    Well-defined under ties on both sides:
+      - target ties (e.g. many gcells saturated at exactly 1.0) only
+        decide membership in S, they are never ranked against each other;
+      - pred ties straddling the top-|S| cutoff get fractional credit
+        (the expected hit count over every ordering of the tied gcells),
+        so the result never depends on argsort tie order;
+      - ROC-AUC is the Mann-Whitney statistic with average ranks.
+
+    With k = |S|, precision == recall by construction (both are
+    hits / |S|); both are reported because the results table asks for
+    them. Undefined cases (S empty, or S the whole map) return NaN.
+    """
+    pred = np.asarray(pred, dtype=np.float64).reshape(-1)
+    target = np.asarray(target, dtype=np.float64).reshape(-1)
+    hot = target >= threshold
+    k = int(hot.sum())
+    n = len(target)
+    out = dict(threshold=threshold, n_hotspots=k, n_gcells=n)
+    if k == 0 or k == n:
+        out.update(precision=float("nan"), recall=float("nan"), roc_auc=float("nan"))
+        return out
+
+    cutoff = np.sort(pred)[::-1][k - 1]
+    above = pred > cutoff
+    tied = pred == cutoff
+    n_above = int(above.sum())
+    hits = float((above & hot).sum())
+    hits += (k - n_above) * float((tied & hot).sum()) / float(tied.sum())
+
+    ranks = _avg_rank(pred) + 1.0
+    n_neg = n - k
+    auc = (ranks[hot].sum() - k * (k + 1) / 2.0) / (k * n_neg)
+
+    out.update(precision=hits / k, recall=hits / k, roc_auc=float(auc))
+    return out
+
+
+def hotspot_detection_per_channel(pred, target, threshold=0.9):
+    """hotspot_detection for each of the [horizontal, vertical] channels of
+    (n, 2) arrays. Channels are reported separately, never averaged: under
+    a band blockage the two have very different hotspot counts."""
+    pred = np.asarray(pred)
+    target = np.asarray(target)
+    return dict(h=hotspot_detection(pred[:, 0], target[:, 0], threshold),
+                v=hotspot_detection(pred[:, 1], target[:, 1], threshold))
+
+
 def kendall_tau(pred, target):
     """Kendall's tau-b rank correlation between two 1D arrays.
 

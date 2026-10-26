@@ -56,7 +56,7 @@ def kendall_worker(n):
 
 def main():
     from baselines import DensityBaseline, RUDYBaseline
-    from metrics import combined_congestion, fraction_above, kendall_tau, spearman_corr
+    from metrics import combined_congestion, fraction_above, hotspot_detection_per_channel, kendall_tau, spearman_corr
     from model import CongestionGNN
     from partition import reference_forward
     from scalability import run_cmd
@@ -95,6 +95,7 @@ def main():
                      finite=bool(torch.isfinite(pred).all()),
                      spearman=[spearman_corr(pred[:, c], y[:, c]) for c in range(2)],
                      spearman_avg_ties=[avg_rank_spearman(pred[:, c], y[:, c]) for c in range(2)],
+                     hotspot=hotspot_detection_per_channel(pred.numpy(), y.numpy()),
                      frac_tied_pred=[1 - len(np.unique(pred[:, c].numpy())) / len(pred) for c in range(2)],
                      combined_congestion_shape=list(combined_congestion(grid).shape),
                      fraction_above_0_9=fraction_above(grid, 0.9),
