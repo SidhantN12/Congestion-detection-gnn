@@ -5,6 +5,7 @@
 #
 # Usage: bash flow/blockage_layer_sweep.sh <design> <base_variant> <min_layer>:<tag> ...
 #   e.g. bash flow/blockage_layer_sweep.sh dynamic_node g1 metal5:x2 metal6:x3
+# HOOK=add_capacity_band.tcl selects the capacity-cut hook instead of the obstruction.
 set -uo pipefail
 
 design=$1
@@ -26,7 +27,7 @@ for spec in "$@"; do
     bash -c "cd /OpenROAD-flow-scripts/flow && source ../env.sh >/dev/null && \
       make DESIGN_CONFIG=./designs/nangate45/$design/config.mk FLOW_VARIANT=$tag \
         SKIP_INCREMENTAL_REPAIR=1 FLOORPLAN_DEF= GLOBAL_ROUTE_ARGS=-allow_congestion \
-        PRE_GLOBAL_ROUTE_TCL=/project/flow/add_die_blockage.tcl \
+        PRE_GLOBAL_ROUTE_TCL=/project/flow/${HOOK:-add_die_blockage.tcl} \
         BLOCKAGE_BAND_CENTER=0.5 BLOCKAGE_BAND_WIDTH=0.2 \
         BLOCKAGE_MIN_LAYER=$min_layer BLOCKAGE_MAX_LAYER=metal10 grt" \
     > "$PROJECT/logs/${design}_${tag}.log" 2>&1

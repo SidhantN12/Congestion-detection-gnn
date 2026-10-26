@@ -318,3 +318,55 @@ docker run --rm -v /root/orfs_work:/work -v "$PWD:/project" -e QT_QPA_PLATFORM=o
 4. Timing is one run per configuration; no repeat-to-repeat spread was
    measured. The two full dynamic_node runs (`g1`, `g1b`) took 469.6 s
    and 469.2 s floorplan -> GRT.
+
+## Capacity cut via `set_global_routing_region_adjustment`: also stored as usage
+
+To make the band visible, `flow/add_capacity_band.tcl` (PRE_GLOBAL_ROUTE
+hook) cuts capacity with `set_global_routing_region_adjustment` instead of
+an obstruction (same band 0.5/0.2, metal4-10, adjustment 1.0; GRT-only
+clone `c1` of `g1`'s placement, `HOOK=add_capacity_band.tcl bash
+flow/blockage_layer_sweep.sh dynamic_node g1 metal4:c1`). **It does not
+change capacity either.** From the extracted .npz (band = GCell rows
+34-50):
+
+| run | ch | capacity in band | capacity out | demand in band | demand out | ratio in band |
+|---|---|---|---|---|---|---|
+| g1 (none) | H | 35.82 | 35.97 | 21.45 | 20.25 | 0.599 |
+| g1 (none) | V | 40.76 | 40.76 | 20.10 | 20.45 | 0.493 |
+| g1b (obstruction) | H | 35.82 | 35.97 | 30.94 | 20.87 | 0.864 |
+| g1b (obstruction) | V | 40.76 | 40.76 | 38.20 | 20.55 | 0.938 |
+| c1 (region adjustment) | H | 35.82 | 35.97 | 30.59 | 20.74 | 0.854 |
+| c1 (region adjustment) | V | 40.76 | 40.76 | 36.79 | 20.52 | 0.903 |
+
+c1's capacity array differs from g1's in 0 GCells; per layer, GCell
+(40,42) reads metal4-10 usage == capacity exactly as with the obstruction.
+g1 vs g1b capacity arrays are bit-identical too. **So the Gate 1 labels
+were positionally memorisable**: the band changes the labels but no input.
+
+Hypothesis, not verified: `dbGCellGrid` stores *nominal* capacity and
+counts every capacity reduction as usage. If so, the platform's own layer
+adjustments (`fastroute.tcl`: 0.5 on metal2-3, 0.25 on metal4+) are in
+every label since Phase 2 too: metal2 capacity 15 is the raw track count
+(2.85 um GCell / 0.19 um pitch), and the no-blockage run shows small
+constant usage on upper layers (metal8 1/3, metal9 1/2) consistent with
+reserved tracks. Phase 2's GUI agreement cannot rule this out (the GUI
+reads the same values). Spatially near-uniform, so it inflates absolute
+labels more than it misleads ranking.
+
+Agreed fix, **not implemented** (machine ran out of time): snap the band
+to the GCell grid (pitch 5700 DBU at every utilisation measured: 85x85 at
+CORE_UTILIZATION 40, 65x65 at 70, origin 0), assert that cut layers read
+usage == capacity in every band GCell, and remove those layers' usage and
+capacity for band GCells in `odb_text_to_npz.py`, keeping the raw arrays
+alongside. Then verify capacity drops in band in the .npz before using it.
+Band position and width per sample to come from a seeded list.
+
+## Status when the droplet expired
+
+Gate 2 (corpus) and Gate 3 (smoke test) were **not run**. The capacity-cut
+recipe was not settled in time: the obstruction (Gate 1) and the region
+adjustment both proved invisible in the inputs, and the extraction-side
+correction above is the open next step. Measured natural-congestion
+reference for that decision: dynamic_node at CORE_UTILIZATION 70 (78.1%
+after detailed placement, 65x65) with no blockage: max 0.9722, 72 GCells
+(1.70%) > 0.9 (H 62, V 10), IQR 0.165, reference_router_seconds 116.
