@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Congestion GNN — Prediction Viewer</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="fixture-banner" class="fixture-banner" hidden>
+  <strong>Fixture demo data.</strong>
+  No trained checkpoint is loaded yet — the shown prediction is the synthetic
+  proxy label plus calibrated noise, not a model result. This banner
+  disappears automatically once a real checkpoint is found.
+</div>
+
+<header class="topbar">
+  <h1>Congestion GNN</h1>
+  <div id="latency-badge" class="latency-badge">
+    <span class="latency-badge-item">
+      <span class="latency-badge-label">Inference</span>
+      <span id="inference-value" class="latency-badge-value">—</span>
+    </span>
+    <span class="latency-badge-sep">vs</span>
+    <span class="latency-badge-item">
+      <span class="latency-badge-label">Router (ORFS)</span>
+      <span id="router-value" class="latency-badge-value latency-badge-pending">pending</span>
+    </span>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="canvas-pane">
+    <div class="canvas-wrap">
+      <canvas id="main-canvas"></canvas>
+      <div id="zoom-label" class="zoom-label" hidden></div>
+    </div>
+    <p class="canvas-hint">
+      In <strong>Compare</strong> mode: drag the divider, or press
+      <kbd>S</kbd> to auto-sweep it (useful at a podium).
+      Click a hotspot row to zoom in; press <kbd>Esc</kbd> to zoom back out.
+    </p>
+  </section>
+
+  <aside class="side-panel">
+    <section class="panel-block">
+      <label class="panel-label" for="design-select">Design</label>
+      <select id="design-select"></select>
+      <div id="design-meta" class="design-meta"></div>
+    </section>
+
+    <section class="panel-block">
+      <span class="panel-label">Channel</span>
+      <div id="channel-toggle" class="toggle-group" role="group" aria-label="Channel">
+        <button type="button" data-channel="horizontal" class="toggle-btn">Horizontal</button>
+        <button type="button" data-channel="vertical" class="toggle-btn">Vertical</button>
+        <button type="button" data-channel="max" class="toggle-btn is-active">Max</button>
+      </div>
+    </section>
+
+    <section class="panel-block">
+      <span class="panel-label">Mode</span>
+      <div id="mode-toggle" class="toggle-group" role="group" aria-label="Mode">
+        <button type="button" data-mode="prediction" class="toggle-btn is-active">Prediction</button>
+        <button type="button" data-mode="truth" class="toggle-btn">Truth</button>
+        <button type="button" data-mode="compare" class="toggle-btn">Compare</button>
+        <button type="button" data-mode="difference" class="toggle-btn">Difference</button>
+      </div>
+    </section>
+
+    <section class="panel-block">
+      <span class="panel-label">Legend</span>
+      <div id="legend" class="legend"></div>
+    </section>
+
+    <section class="panel-block">
+      <span class="panel-label">Metrics</span>
+      <div id="metrics-panel" class="metrics-panel"></div>
+    </section>
+
+    <section class="panel-block panel-block-grow">
+      <span class="panel-label">Top hotspots (by ground truth)</span>
+      <div class="hotspot-table-wrap">
+        <table id="hotspot-table" class="hotspot-table">
+          <thead>
+            <tr>
+              <th>#</th><th>x,y</th><th>pred</th><th>true</th><th>Δrank</th>
+            </tr>
+          </thead>
+          <tbody id="hotspot-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
