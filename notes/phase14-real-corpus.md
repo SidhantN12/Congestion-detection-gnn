@@ -415,11 +415,10 @@ first-pass ordering on every layer (k4b > k5b), and only 84-126 GCells
 coincide between caps. The router's "demand" and the grid's "usage" are
 in different units (edges vs per-GCell tracks, the latter likely
 including reserved tracks), so totals are compared by ordering, not
-value. **Every run before this section (g1, g1b, the band sweep, c1,
-nat_u70) still had the incremental pass**; their numbers stand as
-measured, but they describe the post-incremental grid. The same
-mechanism is a plausible, unproven cause of Phase 6 v1's bit-identical
-layer-cap maps.
+value. Every run before this section (g1, g1b, the band sweep, c1,
+nat_u70) had the incremental pass. Whether that changed *their* grids
+was tested afterwards and the answer is no for the two runs checked;
+see "Which earlier runs the incremental pass affected" below.
 
 Heatmap agreement still holds on a capped first-pass run (k5b):
 7,225/7,225 GCells, max abs diff 0.000005.
@@ -436,3 +435,94 @@ Heatmap agreement still holds on a capped first-pass run (k5b):
 
 Router first pass: no overflow at any cap (metal2-4 total usage 43.03%,
 metal2-5 31.31%, metal2-6 25.34%). GRT step on these: 102-114 s.
+
+## Which earlier runs the incremental pass affected
+
+The cap-sweep finding raised the question of whether every pre-fix
+measurement (Gate 1, the band sweep, the 78% natural-congestion run)
+describes an overwritten grid. Tested directly: clone the run, re-run
+GRT only on the identical placement with `OPT_POST_GRT_WNS=1` (0
+`start_incremental` calls in the new logs, 1 in each original), extract,
+and compare arrays.
+
+| original (incremental pass) | re-run (no incremental pass) | demand / capacity / ratio GCells that differ |
+|---|---|---|
+| nat_u70 (CORE_UTILIZATION 70, no blockage, full stack) | nat_u70b | 0 / 0 / 0 of 4,225 (bit-identical) |
+| g1b (Gate 1: metal4-10 obstruction band, full stack) | g1c | 0 / 0 / 0 of 7,225 (bit-identical) |
+
+**So the overwrite is not universal.** On the full routing stack (with or
+without the obstruction band) the leftover incremental reroute leaves
+the grid exactly as the first pass wrote it. It changed the grid only
+when the stack was capped by `set_routing_layers` (k4 / k5). The
+mechanism is not traced at source level.
+
+Status of the earlier measurements:
+
+- **Gate 1 (g1, g1b): not superseded by the incremental-pass finding.**
+  g1b is verified bit-identical without the pass; g1 differs from g1b
+  only by being an earlier identical run. (Gate 1's labels are still
+  superseded as a corpus recipe, for the separate reason above: the
+  obstruction is stored as usage, so no input marks it.)
+- **Band sweep (blockage layer sweep, c1 region adjustment): not
+  individually re-run.** They use the same full stack and hook mechanism
+  as g1b, so they are very likely unaffected, but that is inferred, not
+  measured. Superseded as a recipe by the metal2-5 cap (k5b and the
+  Gate 2 corpus), not as measurements.
+- **k4, k5 (capped, with the pass): superseded** by k4b, k5b. Their
+  metal2-4 demand is the overwritten grid.
+- **nat_u70: stands, verified** (nat_u70b bit-identical).
+
+### Natural congestion remains insufficient after the fix
+
+nat_u70b (dynamic_node, CORE_UTILIZATION 70 = 78.1% after detailed
+placement, full metal2-10 stack, no blockage, no incremental pass):
+max H / V 0.9722 / 0.9487, 72 GCells (1.70%) combined > 0.9 (H 62,
+V 10), 0 at 1.0, 0 above 1.0, IQR combined 0.1646 (H 0.1780, V 0.1500),
+188 distinct combined values (H 101, V 117). Router first pass: total
+usage 34.00%, 0 overflow. GRT step 110 s. Identical to nat_u70 in every
+GCell. With 10 vertical hotspots on 4,225 GCells at 78% utilisation,
+natural congestion remains insufficient after the fix, and the metal2-5
+cap stays in the recipe.
+
+### Phase 6: probable cause of the identical maps
+
+Phase 6 v1 (`notes/phase6-mini-dataset.md`) found that the two
+*constrained* layer-cap tiers (caps set by `set_routing_layers` in a
+FASTROUTE_TCL copy, `flow/fastroute_capped_metal3.tcl`) produced
+bit-identical final `dbGCellGrid`s across seeds, while the
+*unconstrained* "full" tier stayed distinct, and it pointed at the
+incremental repair stages. That is exactly the pattern measured here:
+the incremental reroute overwrites a capped stack's grid and leaves a
+full stack's grid alone. The incremental reroute is therefore the
+**probable** cause of Phase 6 v1's identical maps. **Not proven**: Phase 6
+ran on gcd, a different ORFS version and a different cap mechanism
+(FASTROUTE_TCL rather than a PRE_GLOBAL_ROUTE hook), and was not re-run.
+Phase 6 v2's identical *placements* across PLACE_DENSITY are a separate
+effect (RePlAce converging on a ~500-cell design) and are not explained
+by this.
+
+## Gate 2 recipe
+
+Added to `flow/run_flow.sh`, applied to every corpus run:
+
+| setting | why |
+|---|---|
+| `OPT_POST_GRT_WNS=1` | with `SKIP_INCREMENTAL_REPAIR=1`, removes the last incremental reroute (recover_power block), which overwrote capped grids |
+| `GLOBAL_ROUTE_ARGS='-congestion_report_iter_step 5 -verbose -allow_congestion'` | stock default plus `-allow_congestion`; `-verbose` keeps the router's own per-layer table in every log |
+| `PRE_GLOBAL_ROUTE_TCL=/project/flow/cap_routing_layers.tcl CAP_MAX_LAYER=metal5` | signal stack metal2-5, clock metal4-5, whole die, applied at GRT only (placement and CTS see the stock stack) |
+
+Sweep (`bash flow/sweep_corpus.sh`, one command, sequential):
+CORE_UTILIZATION default / +15 / +25 with GPL_RANDOM_SEED 1 / 2 / 3;
+defaults dynamic_node 40, aes 45, ibex 50, tinyRocket 60. aes ships a
+fixed floorplan, not a utilisation; that floorplan implies ~30 (core
+229.9 x 229.6 um from its ROW lines vs 15,351 um^2 synth area = 29.1%),
+which would make aes much sparser than the other three, so 45 is used.
+A failed run steps utilisation back 5 points, at most twice, never to
+or below the previous variant's value; a design that still fails is
+logged and the sweep continues. The first two dynamic_node maps are
+hashed before the rest run. Graphs: `src/build_dataset.py
+data/raw/corpus data/processed/corpus`; table: `src/corpus_report.py`.
+
+Unattended-run hardening: every `rm` in `flow/*.sh` uses `${VAR:?}`
+form (an unset variable aborts the command instead of widening its
+target).

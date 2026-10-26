@@ -14,6 +14,13 @@
 #                              passes and their incremental reroutes
 #   FLOORPLAN_DEF=             ignores any fixed floorplan DEF (aes ships one),
 #                              so CORE_UTILIZATION actually sizes the core
+#   OPT_POST_GRT_WNS=1         with the above, also skips the recover_power
+#                              block's incremental reroute, which otherwise
+#                              overwrites the GCell grid after the first pass
+#   GLOBAL_ROUTE_ARGS          stock default plus -allow_congestion
+#   PRE_GLOBAL_ROUTE_TCL       flow/cap_routing_layers.tcl, signal stack capped
+#                              at $CAP_MAX_LAYER (default metal5) over the
+#                              whole die, at global route only
 #
 # Timing: synth and floorplan->grt are separate make invocations, each timed
 # with wall clock around its own `docker run` (container start included).
@@ -39,7 +46,10 @@ RAW="$PROJECT/data/raw"
 mkdir -p "$PROJECT/logs" "$RAW" "$ORFS_WORK"
 
 make_args="DESIGN_CONFIG=./designs/nangate45/$design/config.mk FLOW_VARIANT=$variant"
-make_args="$make_args SKIP_INCREMENTAL_REPAIR=1 FLOORPLAN_DEF= ${extra[*]:-}"
+make_args="$make_args SKIP_INCREMENTAL_REPAIR=1 FLOORPLAN_DEF= OPT_POST_GRT_WNS=1"
+make_args="$make_args GLOBAL_ROUTE_ARGS='-congestion_report_iter_step 5 -verbose -allow_congestion'"
+make_args="$make_args PRE_GLOBAL_ROUTE_TCL=/project/flow/cap_routing_layers.tcl CAP_MAX_LAYER=${CAP_MAX_LAYER:-metal5}"
+make_args="$make_args ${extra[*]:-}"
 
 in_container() {
   docker run --rm -v "$ORFS_WORK:/work" -v "$PROJECT:/project" \
@@ -51,7 +61,7 @@ if [ "${EXTRACT_ONLY:-0}" != 1 ]; then
   for d in results logs objects reports; do
     rm -rf "${ORFS_WORK:?}/${d:?}/nangate45/${design:?}/${variant:?}"
   done
-  rm -f "$RAW/sweep_${design}__${variant}_congestion.npz" "$RAW/sweep_${design}__${variant}_placement.npz"
+  rm -f "${RAW:?}/sweep_${design:?}__${variant:?}_congestion.npz" "${RAW:?}/sweep_${design:?}__${variant:?}_placement.npz"
   : > "$LOG"
 
   t0=$(date +%s.%N)
@@ -76,7 +86,7 @@ if [ "${EXTRACT_ONLY:-0}" != 1 ]; then
     echo "total_s=$(echo "$t2 - $t0" | bc)"
   } > "$TIMING"
 else
-  rm -f "$RAW/sweep_${design}__${variant}_congestion.npz" "$RAW/sweep_${design}__${variant}_placement.npz"
+  rm -f "${RAW:?}/sweep_${design:?}__${variant:?}_congestion.npz" "${RAW:?}/sweep_${design:?}__${variant:?}_placement.npz"
   sed -i '/^grt_odb=/d; /^status=/d' "$TIMING"
 fi
 

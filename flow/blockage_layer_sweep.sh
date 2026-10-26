@@ -21,7 +21,7 @@ for spec in "$@"; do
     rm -rf "${ORFS_WORK:?}/${d:?}/nangate45/${design:?}/${tag:?}"
     cp -a "$ORFS_WORK/$d/nangate45/$design/$base" "$ORFS_WORK/$d/nangate45/$design/$tag"
   done
-  rm -f "$ORFS_WORK/results/nangate45/$design/$tag/5_1_grt.odb" "$ORFS_WORK/results/nangate45/$design/$tag/5_1_grt.sdc"
+  rm -f "${ORFS_WORK:?}/results/nangate45/${design:?}/${tag:?}/5_1_grt.odb" "${ORFS_WORK:?}/results/nangate45/${design:?}/${tag:?}/5_1_grt.sdc"
   start=$(date +%s)
   docker run --rm -v "$ORFS_WORK:/work" -v "$PROJECT:/project" -e WORK_HOME=/work openroad/orfs:latest \
     bash -c "cd /OpenROAD-flow-scripts/flow && source ../env.sh >/dev/null && \

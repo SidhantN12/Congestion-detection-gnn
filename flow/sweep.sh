@@ -48,8 +48,8 @@ for band_center in $BAND_CENTERS; do
       bwpct=$(printf "%.0f" "$(echo "$band_width * 100" | bc)")
       sample="bc${bcpct}_bw${bwpct}_s${seed}"
 
-      rm -rf "results/nangate45/gcd/$sample" "logs/nangate45/gcd/$sample" \
-             "objects/nangate45/gcd/$sample" "reports/nangate45/gcd/$sample"
+      rm -rf "results/nangate45/gcd/${sample:?}" "logs/nangate45/gcd/${sample:?}" \
+             "objects/nangate45/gcd/${sample:?}" "reports/nangate45/gcd/${sample:?}"
 
       docker run --rm -u 1000:1000 \
         -v "$FLOW_DIR:/work" \
