@@ -88,26 +88,37 @@ the field is honestly empty rather than fabricated).
 - `api/designs.py` (`DesignStore`): manifest + graph cache (3 small
   designs, trivially cheap to keep in memory), and the derived
   quantities every route needs.
-  - **Latency honesty**: `prediction_maps()` always runs a real forward
-    pass through the loaded model and times it with `perf_counter` -
-    that cost is real regardless of whether the weights are trained,
-    since it's the same architecture doing the same arithmetic on the
-    same graph. What differs by `model_source` is only *which numbers
-    get shown*: in `"checkpoint"` mode the forward pass's own output is
-    the prediction; in `"fixture"` mode the forward pass still runs (so
-    `inference_seconds` stays genuinely measured) but the displayed
-    values are the pre-baked fixture array, per the decision above.
-  - **Kendall's tau, conditional exactness** (revised from an earlier
-    draft that always sampled): Phase 12 measured the existing O(n^2)
-    `kendall_tau` getting OOM-killed above ~15,376 gcells, fine at
-    8,000. `metrics()` computes Kendall **exactly** when a design has
-    <= 10,000 gcells and on a fixed-seed 2,000-gcell subsample above
-    that, reporting `kendall_sampled` either way. The three stub designs
-    deliberately straddle that line (8,836 exact; 11,025 and 13,340
-    sampled) so both code paths are exercised by the gate itself. The
-    real corpus (15K-25K cells) may well land under 10,000 gcells too,
-    in which case Gate 4's results table gets an exact number instead of
-    throwing away precision by sampling unconditionally.
+  - **Latency honesty, revised**: an initial version timed one forward
+    pass per request with `perf_counter`. That's real but noisy: across
+    the 3 stub designs, first-call cold cost dominated the spread enough
+    that per-design ranges overlapped (153-199ms vs 201-213ms), which is
+    useless for a demo badge that needs one stable number. Fixed via
+    `benchmark_latency()`: one untimed warm-up call, then
+    `LATENCY_BENCHMARK_RUNS` (25) timed calls, reporting the **median**.
+    Computed once per design and cached for the process's lifetime -
+    `prediction_maps()` reads the cached figure rather than re-running
+    the benchmark per request. The cost is real regardless of whether
+    the weights are trained, since it's the same architecture doing the
+    same arithmetic on the same graph; what differs by `model_source` is
+    only *which values get shown* as the prediction (checkpoint: the
+    forward pass's own output; fixture: the pre-baked fixture array) -
+    `inference_seconds` is the genuine benchmarked cost either way.
+  - **Kendall's tau, conditional exactness, threshold revised**: an
+    initial draft set the exact/sampled cutoff at 10,000 gcells. Phase
+    12 measured the existing O(n^2) `kendall_tau` fine at 8,000 gcells
+    and OOM-killed above ~15,376 - 10,000 was leaving exactness on the
+    table for no reason, including for some of the real 15K-25K-cell
+    designs (whose grids are projected to land around 6,500-11,000
+    gcells). Raised to **14,000**, and `select_kendall()` (a standalone
+    function in `designs.py`, independently unit-tested in
+    `tests/test_api_gate1.py` since none of the stub grids exceed
+    14,000) wraps the exact attempt in `try`/`except MemoryError`,
+    falling back to the fixed-seed 2,000-gcell sample if the exact
+    computation fails even under the threshold - the `try/except` is the
+    real guarantee, the threshold is just there to avoid attempting a
+    computation already known to be hopeless. With the new threshold,
+    all three stub designs (8,836 / 11,025 / 13,340 gcells) compute
+    Kendall exactly.
   - **Hotspots**: ranked by the combined channel (`max(H, V)`) against
     *truth*, top-k. `rank_delta = predicted_rank - true_rank` (full-grid
     ranks, not just within the top-k): positive means the model ranks
@@ -137,17 +148,20 @@ not only the test client - see commands below.
 
 Every endpoint checked for every stub design: correct shapes, correct
 value ranges, 404 on an unknown design id, `kendall_sampled` matching
-the 10,000-gcell threshold, hotspot ranks monotonic and starting at 1.
+the 14,000-gcell threshold (plus a standalone check of `select_kendall`
+exercising the sampled-above-threshold and MemoryError-fallback paths
+directly, since no stub grid is large enough to hit either otherwise),
+hotspot ranks monotonic and starting at 1.
 
-**Measured inference latency per design** (the gate's actual ask -
-a real forward pass through the loaded model, `perf_counter`-timed,
-3 runs each on an M1 MacBook Air, CPU):
+**Measured inference latency per design** (the gate's actual ask - the
+median of 25 timed forward passes through the loaded model after a
+warm-up call, on an M1 MacBook Air, CPU):
 
 ```
 design                  gcells    latency_ms  spearman_h  spearman_v  kendall_sampled
-synth_train_20k           8836        198.52       0.769       0.732            False
-synth_val_25k             11025        183.35       0.753       0.755             True
-synth_test_30k            13340        201.83       0.785       0.735             True
+synth_train_20k           8836        141.70       0.769       0.732            False
+synth_val_25k             11025        187.74       0.753       0.755            False
+synth_test_30k            13340        217.23       0.785       0.735            False
 ```
 
 (`spearman_h`/`spearman_v` here are the fixture's own calibrated values,

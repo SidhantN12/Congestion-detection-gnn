@@ -1,17 +1,23 @@
 """Design manifest, graph cache, and the derived quantities (prediction,
 truth, metrics, hotspots) every route in main.py reads.
 
-Latency honesty: prediction_maps() always runs a real forward pass
-through the loaded model and times it with perf_counter - that cost is
-real regardless of whether the weights are trained, since it's the same
-architecture doing the same arithmetic on the same graph. What differs
-by model_source is which numbers get shown: in "checkpoint" mode the
-forward pass's own output is the prediction; in "fixture" mode (no
-checkpoint yet) the forward pass still runs (so inference_seconds stays
-a genuine measurement) but the displayed congestion values are the
-pre-baked fixture array from scripts/generate_stub_fixtures.py, since an
-untrained model's raw output carries no structure (see that script's
-docstring for why that matters for the frontend animations).
+Latency honesty: inference_seconds is a genuine measurement - the median
+of LATENCY_BENCHMARK_RUNS timed forward passes through the loaded model,
+after one untimed warm-up call (so first-call cold cost, which Gate 1
+found dominated single-shot timings and made per-design latencies
+overlap noisily, doesn't leak into the reported figure). It's real
+regardless of whether the weights are trained, since it's the same
+architecture doing the same arithmetic on the same graph. Benchmarked
+once per design and cached (benchmark_latency), not re-run on every
+request - a demo badge needs one stable number, not a fresh 20-run
+benchmark per click. What differs by model_source is only which values
+get *shown* as the prediction: in "checkpoint" mode the forward pass's
+own output is the prediction; in "fixture" mode the displayed congestion
+values are the pre-baked fixture array from
+scripts/generate_stub_fixtures.py, since an untrained model's raw output
+carries no structure (see that script's docstring for why that matters
+for the frontend animations) - but inference_seconds still reflects the
+real, benchmarked cost of that architecture's forward pass.
 """
 
 import json
@@ -24,9 +30,39 @@ import torch
 from metrics import kendall_tau
 from metrics import spearman_corr
 
-KENDALL_EXACT_MAX_GCELLS = 10000
+KENDALL_EXACT_MAX_GCELLS = 14000
 KENDALL_SAMPLE_SIZE = 2000
 KENDALL_SAMPLE_SEED = 0
+
+LATENCY_WARMUP_RUNS = 1
+LATENCY_BENCHMARK_RUNS = 25
+
+
+def select_kendall(pred_channel, truth_channel, kendall_tau_fn=kendall_tau):
+    """Exact Kendall's tau under KENDALL_EXACT_MAX_GCELLS gcells, falling
+    back to a fixed-seed KENDALL_SAMPLE_SIZE-gcell sample above that
+    threshold or if the exact O(n^2) computation raises MemoryError even
+    under it (Phase 12 measured the OOM boundary at ~15,376 gcells, so
+    14,000 leaves headroom, but the try/except is the real guarantee,
+    not the threshold alone). A standalone function so the fallback path
+    is testable without needing an actual 14,000+ gcell graph.
+    """
+    n_gcells = pred_channel.shape[0]
+    kendall = None
+    kendall_sampled = None
+    if n_gcells <= KENDALL_EXACT_MAX_GCELLS:
+        try:
+            kendall = kendall_tau_fn(pred_channel, truth_channel)
+            kendall_sampled = False
+        except MemoryError:
+            kendall = None
+    if kendall is None:
+        sample_rng = np.random.default_rng(KENDALL_SAMPLE_SEED)
+        sample_size = min(KENDALL_SAMPLE_SIZE, n_gcells)
+        sample_idx = sample_rng.choice(n_gcells, size=sample_size, replace=False)
+        kendall = kendall_tau_fn(pred_channel[sample_idx], truth_channel[sample_idx])
+        kendall_sampled = True
+    return dict(kendall=kendall, kendall_sampled=kendall_sampled)
 
 
 class DesignStore:
@@ -37,6 +73,7 @@ class DesignStore:
         self.model_source = model_source
         self.manifest = self._load_manifest()
         self.graph_cache = {}
+        self.latency_cache = {}
 
     def _load_manifest(self):
         manifest_path = os.path.join(self.stub_dir, "manifest.json")
@@ -68,26 +105,50 @@ class DesignStore:
         vertical = ratio[:, 1].tolist()
         return dict(horizontal=horizontal, vertical=vertical)
 
-    def prediction_maps(self, design_id):
-        """Returns dict(horizontal=, vertical=, inference_seconds=). See
-        the module docstring for why inference_seconds is always a real
-        measurement even in fixture mode.
+    def benchmark_latency(self, design_id):
+        """Median forward-pass latency over LATENCY_BENCHMARK_RUNS timed
+        runs, after LATENCY_WARMUP_RUNS untimed warm-up calls. Computed
+        once per design per process and cached - see the module
+        docstring for why a median replaces the earlier single-shot
+        timing.
         """
+        if design_id in self.latency_cache:
+            return self.latency_cache[design_id]
+
         data = self.get_graph(design_id)
 
-        start = time.perf_counter()
-        with torch.no_grad():
-            model_output = self.model(data).numpy()
-        elapsed = time.perf_counter() - start
+        for _ in range(LATENCY_WARMUP_RUNS):
+            with torch.no_grad():
+                self.model(data)
+
+        samples = []
+        for _ in range(LATENCY_BENCHMARK_RUNS):
+            start = time.perf_counter()
+            with torch.no_grad():
+                self.model(data)
+            elapsed = time.perf_counter() - start
+            samples.append(elapsed)
+
+        median_latency = float(np.median(samples))
+        self.latency_cache[design_id] = median_latency
+        return median_latency
+
+    def prediction_maps(self, design_id):
+        """Returns dict(horizontal=, vertical=, inference_seconds=). See
+        the module docstring for how inference_seconds is measured.
+        """
+        data = self.get_graph(design_id)
+        latency = self.benchmark_latency(design_id)
 
         if self.model_source == "checkpoint":
-            prediction = model_output
+            with torch.no_grad():
+                prediction = self.model(data).numpy()
         else:
             prediction = data["gcell"].y_pred_fixture.numpy()
 
         horizontal = prediction[:, 0].tolist()
         vertical = prediction[:, 1].tolist()
-        return dict(horizontal=horizontal, vertical=vertical, inference_seconds=elapsed)
+        return dict(horizontal=horizontal, vertical=vertical, inference_seconds=latency)
 
     def metrics(self, design_id):
         data = self.get_graph(design_id)
@@ -108,20 +169,12 @@ class DesignStore:
             mae = float(np.mean(np.abs(pred_channel - truth_channel)))
             rmse = float(np.sqrt(np.mean((pred_channel - truth_channel) ** 2)))
 
-            n_gcells = pred_channel.shape[0]
-            if n_gcells <= KENDALL_EXACT_MAX_GCELLS:
-                kendall = kendall_tau(pred_channel, truth_channel)
-                kendall_sampled = False
-            else:
-                sample_rng = np.random.default_rng(KENDALL_SAMPLE_SEED)
-                sample_idx = sample_rng.choice(n_gcells, size=KENDALL_SAMPLE_SIZE, replace=False)
-                kendall = kendall_tau(pred_channel[sample_idx], truth_channel[sample_idx])
-                kendall_sampled = True
+            kendall_result = select_kendall(pred_channel, truth_channel)
 
             result[channel_name] = dict(
                 spearman=spearman,
-                kendall=kendall,
-                kendall_sampled=kendall_sampled,
+                kendall=kendall_result["kendall"],
+                kendall_sampled=kendall_result["kendall_sampled"],
                 mae=mae,
                 rmse=rmse,
             )

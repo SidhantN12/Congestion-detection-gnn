@@ -15,9 +15,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "api"))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
+import numpy as np
 from fastapi.testclient import TestClient
 
+import designs as designs_module
 from main import app
+from designs import select_kendall
 
 
 def check_designs_list(client):
@@ -102,7 +105,7 @@ def check_metrics(client, design_id, n_gcells):
     body = response.json()
     channels = body["channels"]
     assert set(channels.keys()) == {"horizontal", "vertical"}
-    expect_sampled = n_gcells > 10000
+    expect_sampled = n_gcells > designs_module.KENDALL_EXACT_MAX_GCELLS
     for channel_name in channels:
         channel = channels[channel_name]
         assert -1.0 <= channel["spearman"] <= 1.0
@@ -113,7 +116,45 @@ def check_metrics(client, design_id, n_gcells):
     return body
 
 
+def check_select_kendall_thresholds():
+    """select_kendall's exact/sampled/MemoryError-fallback logic, tested
+    directly rather than via the stub designs - none of the three stub
+    grids exceed KENDALL_EXACT_MAX_GCELLS (14,000), so this is the only
+    place the sampled and fallback paths are exercised at all.
+    """
+    rng = np.random.default_rng(0)
+
+    small_pred = rng.random(500)
+    small_truth = rng.random(500)
+    small_result = select_kendall(small_pred, small_truth)
+    assert small_result["kendall_sampled"] is False
+
+    large_pred = rng.random(designs_module.KENDALL_EXACT_MAX_GCELLS + 1)
+    large_truth = rng.random(designs_module.KENDALL_EXACT_MAX_GCELLS + 1)
+    large_result = select_kendall(large_pred, large_truth)
+    assert large_result["kendall_sampled"] is True
+
+    call_count = {"n": 0}
+
+    def fail_once_then_succeed(pred_channel, truth_channel):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            raise MemoryError("simulated OOM")
+        from metrics import kendall_tau
+        return kendall_tau(pred_channel, truth_channel)
+
+    fallback_pred = rng.random(500)
+    fallback_truth = rng.random(500)
+    fallback_result = select_kendall(fallback_pred, fallback_truth, kendall_tau_fn=fail_once_then_succeed)
+    assert fallback_result["kendall_sampled"] is True
+    assert call_count["n"] == 2
+
+    print("[0] select_kendall: exact under threshold, sampled over threshold, "
+          "MemoryError under threshold falls back to sampled")
+
+
 def main():
+    check_select_kendall_thresholds()
     client = TestClient(app)
 
     with client:
