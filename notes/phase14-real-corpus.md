@@ -370,3 +370,69 @@ correction above is the open next step. Measured natural-congestion
 reference for that decision: dynamic_node at CORE_UTILIZATION 70 (78.1%
 after detailed placement, 65x65) with no blockage: max 0.9722, 72 GCells
 (1.70%) > 0.9 (H 62, V 10), IQR 0.165, reference_router_seconds 116.
+
+## Routing-layer cap instead of a band (after the deadline was lifted)
+
+The "Status when the droplet expired" section above was wrong about the
+deadline: the six hours were a working budget, not an expiry. Work
+continued. The extraction-side band correction was **not** done (it would
+make labels differ from what the router reports and give up the Phase 2
+heatmap agreement). All artifacts up to this point were archived first:
+`/root/phase14_artifacts_20261026.tar.gz`, 152,331,355 bytes, 625 files,
+sha256 `ad89fa5edc1b290d5d6a46aa4e8c7ab88eba3eaa3822afc00d90eef7b75f4f9f`.
+
+**The cap must be applied at GRT, not via MAX_ROUTING_LAYER on a GRT-only
+re-run.** ORFS calls `set_routing_layers` once, at floorplan
+(`scripts/floorplan.tcl`, via FASTROUTE_TCL), and later stages read it
+from the odb. `flow/cap_routing_layers.tcl` (PRE_GLOBAL_ROUTE hook,
+`CAP_MAX_LAYER`) sets signal metal2-CAP and clock metal4-CAP (metal3-metal4
+for a metal4 cap: set_routing_layers rejects min == max). Verified in the
+extracted per-layer capacity: every layer above the cap reads 0/0.
+
+### The leftover incremental reroute overwrote the GCell grid
+
+With `SKIP_INCREMENTAL_REPAIR=1` one incremental pair still ran
+(`global_route -start_incremental` / `-end_incremental`, the
+recover_power block, which runs when OPT_POST_GRT_WNS is 0; its
+recover_power call itself is a no-op). With it, the metal2-4 and metal2-5
+caps (`k4`, `k5`) extracted **bit-identical demand on metal2, metal3 and
+metal4 in all 7,225 GCells**, and less metal2/3 usage than the uncapped
+run (57,947 vs 79,273 on metal2): physically backwards. Re-run with
+`OPT_POST_GRT_WNS=1` (with SKIP_INCREMENTAL_REPAIR=1 this skips both
+incremental blocks: 0 `start_incremental` calls in the log) and
+`GLOBAL_ROUTE_ARGS='-allow_congestion -verbose'` (restores the router's
+own per-layer table, which `-allow_congestion` alone had replaced):
+
+| run | incremental pass | extracted metal2 / metal3 / metal4 / metal5 usage | router first-pass demand metal2 / metal3 / metal4 / metal5 |
+|---|---|---|---|
+| k5 | yes | 57,947 / 74,594 / 22,320 / 21,726 | - |
+| k4 | yes | 57,947 / 74,594 / 22,320 / - | - |
+| k5b | no | 79,768 / 103,900 / 33,388 / 29,039 | 21,821 / 29,306 / 11,068 / 7,313 |
+| k4b | no | 81,330 / 111,195 / 35,876 / - | 23,383 / 36,601 / 13,556 / - |
+
+Without the incremental pass the extracted grid follows the router's
+first-pass ordering on every layer (k4b > k5b), and only 84-126 GCells
+coincide between caps. The router's "demand" and the grid's "usage" are
+in different units (edges vs per-GCell tracks, the latter likely
+including reserved tracks), so totals are compared by ordering, not
+value. **Every run before this section (g1, g1b, the band sweep, c1,
+nat_u70) still had the incremental pass**; their numbers stand as
+measured, but they describe the post-incremental grid. The same
+mechanism is a plausible, unproven cause of Phase 6 v1's bit-identical
+layer-cap maps.
+
+Heatmap agreement still holds on a capped first-pass run (k5b):
+7,225/7,225 GCells, max abs diff 0.000005.
+
+### Cap sweep (GRT only on g1's placement, no incremental pass, no band)
+
+`EXTRA_MAKE="OPT_POST_GRT_WNS=1 GLOBAL_ROUTE_ARGS='-allow_congestion -verbose'" bash flow/layer_cap_sweep.sh dynamic_node g1 metal6:k6b metal5:k5b metal4:k4b`
+
+| cap | == 1.0 | > 0.9 | > 1.0 | IQR comb | IQR H | IQR V | > 0.9 H / V | == 1.0 H / V | max H / V | distinct |
+|---|---|---|---|---|---|---|---|---|---|---|
+| metal2-6 | 8 (0.11%) | 105 (1.45%) | 0 | 0.2000 | 0.2312 | 0.1714 | 103 / 2 | 8 / 0 | 1.0000 / 0.9143 | 84 |
+| metal2-5 | 78 (1.08%) | 421 (5.83%) | 0 | 0.2267 | 0.2312 | 0.2400 | 109 / 364 | 11 / 69 | 1.0000 / 1.0000 | 84 |
+| metal2-4 | 625 (8.65%) | 1,745 (24.15%) | 0 | 0.2810 | 0.2810 | 0.2400 | 1,506 / 627 | 543 / 135 | 1.0000 / 1.0000 | 47 |
+
+Router first pass: no overflow at any cap (metal2-4 total usage 43.03%,
+metal2-5 31.31%, metal2-6 25.34%). GRT step on these: 102-114 s.
