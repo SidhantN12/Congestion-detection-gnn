@@ -80,6 +80,14 @@ else
   sed -i '/^grt_odb=/d; /^status=/d' "$TIMING"
 fi
 
+# reference_router_seconds: the 5_1_grt step's own elapsed time from ORFS's
+# per-stage table (pin_access + global_route + antenna repair). This is the
+# work the model replaces - its input is a placed design - so it is the
+# figure compared against inference latency, not floorplan->grt.
+sed -i '/^reference_router_seconds=/d' "$TIMING"
+ref_s=$(awk '$1=="5_1_grt" && $2==".odb" {print $3}' "$LOG" | tail -1)
+echo "reference_router_seconds=${ref_s:-NA}" >> "$TIMING"
+
 res=/work/results/nangate45/$design/$variant
 grt_odb=$res/5_1_grt.odb
 if [ ! -f "$ORFS_WORK/results/nangate45/$design/$variant/5_1_grt.odb" ]; then

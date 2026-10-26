@@ -122,8 +122,7 @@ Observations:
   capacity takes 6 distinct values per direction, so the 7,225-GCell map
   has only 163 (no blockage) to 199 (metal4-10) distinct combined values.
   The largest tie group with *no* blockage is 0.4167 x 426 GCells (5.9%).
-  `metrics.spearman_corr` breaks ties by argsort order (Phase 12 already
-  measured this against an average-rank Spearman).
+  `metrics.spearman_corr` now uses midranks (see "Metric fixes" below).
 
 ## Hotspot metric (replaces top-20 hit rate)
 
@@ -141,10 +140,83 @@ channel, never averaged:
   baselines use one definition. `tests/test_metrics.py` checks it against
   brute force (pairwise AUC exact to 1e-12; tie-aware precision 0.7166
   vs 0.7167 over 2,000 random tie orders) and edge cases. PASS.
-- Sanity on real data (dynamic_node `g1b`, RUDY, no fitting): H precision
-  0.0437, AUC 0.6942 (|S| = 480); V precision 0.0380, AUC 0.5270
-  (|S| = 1,159). RUDY does not see the blockage-induced hotspots; this is
-  a measurement, nothing was tuned.
+- Real-data numbers for all three baselines: see "Baselines on the real
+  Gate 1 map" below.
+
+## Metric fixes after Gate 1
+
+**`metrics.spearman_corr` now uses midranks** (`metrics._avg_rank`):
+Pearson correlation of average ranks, the standard tie-corrected
+definition. Previously ties were broken by argsort order, which at 163-199
+distinct values per 7,225 GCells makes the value depend on the order of
+tied elements. `tests/test_metrics.py` [6] checks it against an
+independent O(n^2) textbook midrank implementation on a 7,225-value
+vector with 71 distinct targets / 128 distinct predictions (0.884627 ==
+0.884627), the exact hand-worked case x=[1,2,2,3], y=[1,2,3,4] ->
+3/sqrt(10) = 0.948683 (the old code gave 1.0 here), and invariance to the
+order of tied elements. `kendall_tau` was already tau-b (tie-corrected).
+
+**`baselines.CapacityBaseline`**: least squares on
+[1, cap_h, cap_v, 1/cap_h, 1/cap_v] only; no netlist, no placement.
+Reported next to RUDY and density in `tests/phase12_baselines_gate.py`
+and `tests/test_baselines.py` [6]/[7] ([7]: output unchanged when every
+non-capacity feature is scrambled and every edge removed). On the Phase
+12 *synthetic* graphs capacity is a single constant per channel, so this
+baseline is a constant predictor there; its synthetic numbers mean
+nothing.
+
+## Baselines on the real Gate 1 map (dynamic_node `g1b`)
+
+Only one real design exists at this point, so density and capacity are
+fitted **in-sample** on `g1b` (flatters them; conservative for any claim
+that a model beats them). RUDY is unfitted. Spearman shown with midranks
+and, for comparison, the old argsort tie-breaking.
+
+| baseline | ch | Spearman | (old) | hotspot precision = recall | ROC-AUC | \|S\| | distinct preds |
+|---|---|---|---|---|---|---|---|
+| RUDY | H | 0.6789 | 0.6787 | 0.0437 | 0.6942 | 480 | 6,363 |
+| RUDY | V | 0.5843 | 0.5846 | 0.0380 | 0.5270 | 1,159 | 6,030 |
+| density | H | 0.5950 | 0.5932 | 0.0979 | 0.6637 | 480 | 5,978 |
+| density | V | 0.5654 | 0.5647 | 0.1139 | 0.5753 | 1,159 | 5,975 |
+| capacity | H | 0.0917 | 0.0874 | 0.1636 | 0.5749 | 480 | 36 |
+| capacity | V | 0.0335 | 0.0268 | 0.1516 | 0.4962 | 1,159 | 36 |
+
+Base rates of |S| / 7,225: H 6.6%, V 16.0%. Every baseline is near or
+below chance at finding the hotspots, while RUDY and density still
+rank-correlate 0.57-0.68 with the map as a whole.
+
+## Finding: the blockage is invisible to the model's inputs
+
+The capacity-only result is weak because **GRT records an obstruction as
+usage, not as reduced capacity**. One band GCell (x=40, y=42), usage /
+capacity per layer:
+
+| layer | g1 (no blockage) | g1b (metal4-10 blocked) |
+|---|---|---|
+| metal2 V | 10 / 15 | 12 / 15 |
+| metal3 H | 11 / 20 | 14 / 20 |
+| metal4 V | 3 / 10 | **10 / 10** |
+| metal5 H | 3 / 10 | **10 / 10** |
+| metal6 V | 3 / 10 | **10 / 10** |
+| metal7 H | 1 / 4 | **4 / 4** |
+| metal8 V | 1 / 3 | **3 / 3** |
+| metal9 H | 1 / 2 | **2 / 2** |
+| metal10 V | 0 / 1 | **1 / 1** |
+
+Capacity is identical between the two runs (band mean H 35.82 / V 40.76
+in both); band mean ratio rises H 0.599 -> 0.864, V 0.493 -> 0.938. So:
+1. the gcell capacity feature does **not** encode the blockage (this
+   corrects the Gate 1 open issue that said it did);
+2. placement is bit-identical between g1 and g1b, so **no input feature
+   marks the blockage at all**; a model can only find the band through
+   cell position, and with the band fixed at 0.5/0.2 in every sample it
+   would learn a positional prior that transfers to any held-out design;
+3. inside the band the label is mostly blocked tracks counted as demand,
+   not netlist routing demand. The 1.0 plateau is largely fully-blocked
+   layers.
+
+The blockage recipe is therefore **on hold for the corpus** pending a
+decision (see Gate 1 reply).
 
 ## Gate 1 result: dynamic_node, run `g1b`
 
@@ -170,18 +242,21 @@ metal4-metal10 blocked.
 | isolated GCell nodes / nets without pins | 0 / 0 (PASS) |
 | GCells with no cells | 2,221 / 7,225 (30.7%), not a failure (45% utilisation) |
 | graph build (`build_dataset.py`, tiled kNN) | 7.3 s wall, 374 MiB max RSS, 4.6 MB `.pt` |
-| **flow time, floorplan -> global route** | **469.2 s** |
+| **`reference_router_seconds` (5_1_grt step)** | **122 s** |
+| floorplan -> global route | 469.2 s |
 | synth | 24.9 s |
 | total wall clock incl. synth | 494.1 s |
 
-**Which time to compare against inference:** 469.2 s (floorplan through
-global route). The model's input is a placed design, so synthesis is not
-work the model replaces. Strictly, floorplan and placement are also
-upstream of the model's input; per-stage times from ORFS's own table
-(`logs/dynamic_node_g1b.log`) are floorplan 89 s, global placement 48 s,
-resize 22 s, detailed placement 24 s, CTS 11 s, global route 122 s (the
-GRT step includes 76 s of `pin_access`). Each timed span includes one
-`docker run` container start.
+**Which time to compare against inference: 122 s**, recorded as
+`reference_router_seconds`. The model takes a placed design as input, so
+what it replaces is global routing, not synthesis, floorplan or
+placement. The figure is the `5_1_grt` step's elapsed time from ORFS's
+own per-stage table, which includes `pin_access` (76 s here),
+`global_route` and GRT antenna repair. `flow/run_flow.sh` now writes it
+to `logs/<design>_<variant>.timing` for every run. Per-stage breakdown
+(`logs/dynamic_node_g1b.log`): floorplan 89 s, global placement 48 s,
+resize 22 s, detailed placement 24 s, CTS 11 s, global route 122 s. The
+unblocked run `g1` had a 101 s GRT step.
 
 Tiled kNN on real data: `synthetic.knn_tiled` matched an exact chunked
 brute-force kNN on all 12,977 dynamic_node cells (identical sorted
@@ -237,13 +312,9 @@ docker run --rm -v /root/orfs_work:/work -v "$PWD:/project" -e QT_QPA_PLATFORM=o
    produced demand > capacity. If an overflow regime is wanted later, it
    needs a narrower routing stack (Phase 3's metal2-3 cap), which reopens
    the zero-capacity labelling question.
-2. **`metrics.spearman_corr` ranks ties by argsort order.** On real maps
-   with 163-199 distinct values per 7,225 GCells this makes Spearman
-   depend on tie order. Not changed here; flagged for the results table.
-3. **Node features contain the blockage.** The gcell capacity feature is
-   read from the post-GRT odb (Phase 4's known tension), so it encodes
-   the band. That is how the model can see the blockage at all; it also
-   means capacity is not "from placement only".
+2. ~~`spearman_corr` tie order~~: fixed, midranks (above).
+3. ~~Node features contain the blockage~~: **wrong**, they do not; GRT
+   stores obstructions as usage. See "the blockage is invisible".
 4. Timing is one run per configuration; no repeat-to-repeat spread was
    measured. The two full dynamic_node runs (`g1`, `g1b`) took 469.6 s
    and 469.2 s floorplan -> GRT.

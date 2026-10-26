@@ -42,10 +42,26 @@ DensityBaseline - density only, no connectivity
     .fit(graphs). Uses no net or pin edges at all - only gcell features
     and the gcell grid layout.
 
+CapacityBaseline - routing capacity only (Phase 14)
+    Per gcell, only the capacity_horizontal / capacity_vertical input
+    features: [1, cap_h, cap_v, 1/cap_h, 1/cap_v] -> a least-squares linear
+    map to [H, V] ratio, fitted with .fit(graphs). No netlist, no
+    placement, no neighbourhood. The 1/cap terms are there because the
+    label is demand / capacity. A zero capacity gives 1/cap = 0 (none
+    occur on the Phase 14 blockage recipe, which keeps metal2/3 open).
+    Why it exists: the corpus induces hotspots by cutting capacity with a
+    routing blockage, and capacity is a gcell input feature, so the GNN
+    can see the blockage directly. This baseline measures how much of the
+    task that alone solves; the GNN's result is only interesting by the
+    margin it clears it. Capacity takes a handful of distinct values per
+    channel, so its predictions are heavily tied - use tie-correct
+    metrics (metrics.spearman_corr midranks, hotspot_detection).
+
 Usage:
-    from baselines import RUDYBaseline, DensityBaseline
+    from baselines import RUDYBaseline, DensityBaseline, CapacityBaseline
     rudy = RUDYBaseline();   pred = rudy(data)
     dens = DensityBaseline().fit(train_graphs);   pred = dens(data)
+    cap = CapacityBaseline().fit(train_graphs);   pred = cap(data)
 """
 
 import torch
@@ -190,4 +206,30 @@ class DensityBaseline(nn.Module):
     def forward(self, data):
         if self.weight.numel() == 0:
             raise RuntimeError("DensityBaseline is not fitted - call .fit(graphs) first")
+        return (self.features(data) @ self.weight).float()
+
+
+class CapacityBaseline(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.register_buffer("weight", torch.empty(0))
+
+    def features(self, data):
+        x = data["gcell"].x.double()
+        cap_h = x[:, CAP_H]
+        cap_v = x[:, CAP_V]
+        inv_h = torch.where(cap_h > 0, 1.0 / cap_h.clamp(min=1e-12), torch.zeros_like(cap_h))
+        inv_v = torch.where(cap_v > 0, 1.0 / cap_v.clamp(min=1e-12), torch.zeros_like(cap_v))
+        return torch.stack([torch.ones_like(cap_h), cap_h, cap_v, inv_h, inv_v], dim=1)
+
+    def fit(self, graphs, target="y_ratio"):
+        X = torch.cat([self.features(g) for g in graphs])
+        Y = torch.cat([g["gcell"][target].double() for g in graphs])
+        self.weight = torch.linalg.lstsq(X, Y).solution  # (5, 2)
+        return self
+
+    @torch.no_grad()
+    def forward(self, data):
+        if self.weight.numel() == 0:
+            raise RuntimeError("CapacityBaseline is not fitted - call .fit(graphs) first")
         return (self.features(data) @ self.weight).float()

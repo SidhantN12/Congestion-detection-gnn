@@ -24,26 +24,14 @@ def fraction_above(ratio, threshold):
     return float(np.count_nonzero(combined > threshold)) / combined.size
 
 
-def _rank(x):
-    """Rank-transform a 1D array (ties broken arbitrarily but stably -
-    fine here since congestion ratios are floats, ties are ~never exact).
-    Avoids adding scipy as a dependency for something this small.
-    """
-    order = np.argsort(x)
-    ranks = np.empty_like(order, dtype=np.float64)
-    ranks[order] = np.arange(len(x), dtype=np.float64)
-    return ranks
-
-
-def spearman_corr(pred, target):
-    """Spearman rank correlation between two 1D arrays."""
-    pred_rank = _rank(np.asarray(pred).reshape(-1))
-    target_rank = _rank(np.asarray(target).reshape(-1))
-    return float(np.corrcoef(pred_rank, target_rank)[0, 1])
-
-
 def _avg_rank(x):
-    """Ranks 0..n-1 with tied values sharing their average rank."""
+    """Ranks 0..n-1 with tied values sharing their average rank (midranks).
+
+    Real congestion maps are heavily tied (integer demand over a handful of
+    capacity values: 163-199 distinct values over 7,225 GCells on
+    dynamic_node, notes/phase14-real-corpus.md), so ties must not be
+    broken by argsort order. Avoids adding scipy as a dependency.
+    """
     x = np.asarray(x, dtype=np.float64)
     order = np.argsort(x, kind="stable")
     r = np.empty(len(x))
@@ -53,6 +41,16 @@ def _avg_rank(x):
     counts = uniq[2]
     sums = np.bincount(inv, weights=r)
     return sums[inv] / counts[inv]
+
+
+def spearman_corr(pred, target):
+    """Spearman rank correlation between two 1D arrays: Pearson correlation
+    of midranks, the standard tie-corrected definition. Before Phase 14
+    ties were broken by argsort order, which made the value depend on the
+    order of tied elements."""
+    pred_rank = _avg_rank(np.asarray(pred).reshape(-1))
+    target_rank = _avg_rank(np.asarray(target).reshape(-1))
+    return float(np.corrcoef(pred_rank, target_rank)[0, 1])
 
 
 def hotspot_detection(pred, target, threshold=0.9):

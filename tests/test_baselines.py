@@ -11,8 +11,12 @@
 5. DensityBaseline recovers an exactly-linear target, refuses to predict
    unfitted, and ignores connectivity (dropping every pin edge changes
    nothing).
-6. Interface: both baselines return the same shape/dtype as
+6. Interface: every baseline returns the same shape/dtype as
    CongestionGNN(data), and every function in src/metrics.py accepts them.
+7. CapacityBaseline (Phase 14) recovers an exactly-linear target on its
+   features, refuses to predict unfitted, and reads nothing but the two
+   capacity columns (scrambling every other gcell feature, every cell/net
+   feature, and removing every edge changes nothing).
 
 Usage:
     python tests/test_baselines.py
@@ -25,7 +29,7 @@ import torch
 from torch_geometric.data import HeteroData
 
 sys.path.insert(0, "src")
-from baselines import DensityBaseline, RUDYBaseline, net_bboxes, rect_average
+from baselines import CAP_H, CAP_V, CapacityBaseline, DensityBaseline, RUDYBaseline, net_bboxes, rect_average
 from metrics import combined_congestion, fraction_above, kendall_tau, spearman_corr
 from model import CongestionGNN
 from synthetic import generate_graph
@@ -147,13 +151,50 @@ def check_density(data):
     return DensityBaseline().fit([data])
 
 
-def check_interface(data, dens):
+def check_capacity(data):
+    try:
+        CapacityBaseline()(data)
+        raise AssertionError("unfitted CapacityBaseline should raise")
+    except RuntimeError:
+        pass
+    # Synthetic graphs have one capacity value per channel (features would be
+    # collinear), so give this copy real-looking per-gcell capacities.
+    data = data.clone()
+    g = torch.Generator().manual_seed(1)
+    levels = torch.tensor([12.0, 14.0, 15.0, 17.0, 18.0, 20.0])
+    n = data["gcell"].num_nodes
+    data["gcell"].x[:, CAP_H] = levels[torch.randint(0, 6, (n,), generator=g)]
+    data["gcell"].x[:, CAP_V] = levels[torch.randint(0, 6, (n,), generator=g)]
+    cap = CapacityBaseline()
+    X = cap.features(data)
+    true_w = torch.tensor([[0.2, 0.1], [-0.01, 0.02], [0.03, -0.02], [5.0, 0.0], [0.0, 4.0]],
+                          dtype=torch.float64)
+    data["gcell"].y_synthetic = (X @ true_w).float()
+    cap.fit([data], target="y_synthetic")
+    err = (cap.weight - true_w).abs().max().item()
+    del data["gcell"].y_synthetic
+    scrambled = data.clone()
+    keep = scrambled["gcell"].x[:, [CAP_H, CAP_V]].clone()
+    scrambled["gcell"].x = torch.rand(scrambled["gcell"].x.shape, generator=g)
+    scrambled["gcell"].x[:, [CAP_H, CAP_V]] = keep
+    for nt in ("cell", "net"):
+        scrambled[nt].x = torch.rand(scrambled[nt].x.shape, generator=g)
+    for et in scrambled.edge_types:
+        scrambled[et].edge_index = scrambled[et].edge_index[:, :0]
+    same = torch.equal(cap(data), cap(scrambled))
+    print(f"[7] capacity: recovers exact linear weights (max err {err:.2e}, float32 target); output unchanged "
+          f"with every non-capacity feature scrambled and all edges removed: {same}")
+    assert err < 1e-4 and same
+    return CapacityBaseline().fit([data]), data
+
+
+def check_interface(data, dens, cap):
     model = CongestionGNN({nt: data[nt].x.shape[1] for nt in data.node_types}, list(data.edge_types))
     with torch.no_grad():
         ref = model(data)
     ny, nx = (int(v) for v in data["gcell"].grid_shape)
     y = data["gcell"].y_ratio
-    for name, b in [("RUDY", RUDYBaseline()), ("density", dens)]:
+    for name, b in [("RUDY", RUDYBaseline()), ("density", dens), ("capacity", cap)]:
         pred = b(data)
         assert pred.shape == ref.shape and pred.dtype == ref.dtype and torch.isfinite(pred).all()
         sp = [spearman_corr(pred[:, c], y[:, c]) for c in range(2)]
@@ -174,7 +215,8 @@ def main():
     check_against_paper(data)
     check_degenerate()
     dens = check_density(data)
-    check_interface(data, dens)
+    cap_fit = check_capacity(data)
+    check_interface(cap_fit[1], dens, cap_fit[0])
     print("\nPASS")
 
 
