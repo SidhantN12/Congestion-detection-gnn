@@ -32,6 +32,9 @@ const state = {
   truthCombined: null,
   diffCombined: null,
   domainMax: 1.0,
+  predDisplayValues: null,
+  predictionContrastRange: null,
+  predColorDomain: 1.0,
   domainMaxAbsDiff: 1.0,
   zoomed: false,
   zoomedHotspot: null,
@@ -95,6 +98,31 @@ function arrayMaxAbs(arr) {
     }
   }
   return result;
+}
+
+function percentileRange(values, lowerFraction, upperFraction) {
+  const sorted = Array.from(values).sort((a, b) => a - b);
+  const lowerIndex = Math.floor((sorted.length - 1) * lowerFraction);
+  const upperIndex = Math.ceil((sorted.length - 1) * upperFraction);
+  return [sorted[lowerIndex], sorted[upperIndex]];
+}
+
+function predictionDisplayValues() {
+  const contrastEnabled = document.getElementById("prediction-contrast").checked;
+  if (!contrastEnabled) {
+    state.predictionContrastRange = null;
+    state.predColorDomain = state.domainMax;
+    return state.predCombined;
+  }
+  const range = percentileRange(state.predCombined, 0.02, 0.98);
+  const span = Math.max(range[1] - range[0], 1e-6);
+  const display = new Float64Array(state.predCombined.length);
+  for (let i = 0; i < state.predCombined.length; i++) {
+    display[i] = Math.min(1, Math.max(0, (state.predCombined[i] - range[0]) / span));
+  }
+  state.predictionContrastRange = range;
+  state.predColorDomain = OVERFLOW_THRESHOLD + 0.001;
+  return display;
 }
 
 // ---- data loading ----
@@ -216,11 +244,13 @@ function rebuildBuffers() {
   const truthMax = arrayMax(state.truthCombined);
   state.domainMax = Math.max(predMax, truthMax, OVERFLOW_THRESHOLD + 0.001);
   state.domainMaxAbsDiff = Math.max(arrayMaxAbs(state.diffCombined), 1e-3);
+  state.predDisplayValues = predictionDisplayValues();
 
   const sequentialColorFn = (v) => congestionColor(v, state.domainMax);
+  const predColorFn = (v) => congestionColor(v, state.predColorDomain);
   const diffColorFn = (v) => diffColor(v, state.domainMaxAbsDiff);
 
-  renderer.buildBuffer("prediction", state.predCombined, sequentialColorFn);
+  renderer.buildBuffer("prediction", state.predDisplayValues, predColorFn);
   renderer.buildBuffer("truth", state.truthCombined, sequentialColorFn);
   renderer.buildBuffer("difference", state.diffCombined, diffColorFn);
 
@@ -293,7 +323,10 @@ function drawCompareLabels(destRect) {
   ctx.save();
   ctx.font = "12px -apple-system, sans-serif";
   ctx.fillStyle = "rgba(230, 233, 240, 0.85)";
-  ctx.fillText("PREDICTED", destRect.x + 10, destRect.y + 18);
+  const predictionLabel = document.getElementById("prediction-contrast").checked
+    ? "PREDICTED · MAGNIFIED"
+    : "PREDICTED";
+  ctx.fillText(predictionLabel, destRect.x + 10, destRect.y + 18);
   const truthLabelWidth = ctx.measureText("TRUTH").width;
   ctx.fillText("TRUTH", destRect.x + destRect.width - truthLabelWidth - 10, destRect.y + 18);
   ctx.restore();
@@ -334,12 +367,13 @@ function startBloomAnimation() {
     return;
   }
 
+  const displayDomain = mode === "prediction" ? state.predColorDomain : state.domainMax;
   const colorFn = mode === "difference"
     ? (v) => diffColor(v, state.domainMaxAbsDiff)
-    : (v) => congestionColor(v, state.domainMax);
+    : (v) => congestionColor(v, displayDomain);
   const normalizeFn = mode === "difference"
     ? (v) => Math.min(Math.abs(v) / state.domainMaxAbsDiff, 1)
-    : (v) => Math.min(v / state.domainMax, 1);
+    : (v) => Math.min(v / displayDomain, 1);
 
   const n = trueValues.length;
   const frameBuffer = new Float64Array(n);
@@ -377,7 +411,7 @@ function startBloomAnimation() {
 
 function getModeTrueValues(mode) {
   if (mode === "prediction") {
-    return state.predCombined;
+    return state.predDisplayValues;
   }
   if (mode === "truth") {
     return state.truthCombined;
@@ -580,6 +614,11 @@ function wireControls() {
   canvas.addEventListener("pointermove", onCanvasPointerMove);
   window.addEventListener("pointerup", onCanvasPointerUp);
 
+  document.getElementById("prediction-contrast").addEventListener("change", () => {
+    rebuildBuffers();
+    drawCurrentMode();
+  });
+
   document.getElementById("channel-toggle").addEventListener("click", (event) => {
     const button = event.target.closest(".toggle-btn");
     if (!button) {
@@ -750,9 +789,10 @@ function highlightTableRow(key, isSelection) {
 function updateLegend() {
   const container = document.getElementById("legend");
   const isDifference = state.mode === "difference";
+  const isPredictionContrast = state.mode === "prediction" && state.predictionContrastRange !== null;
   const gradientCss = isDifference
     ? divergingGradientCss(state.domainMaxAbsDiff)
-    : sequentialGradientCss(state.domainMax);
+    : sequentialGradientCss(isPredictionContrast ? OVERFLOW_THRESHOLD + 0.001 : state.domainMax);
 
   const ramp = document.createElement("div");
   ramp.className = "legend-ramp";
@@ -767,6 +807,13 @@ function updateLegend() {
       <span>agree (0)</span>
       <span>over-predict (+${state.domainMaxAbsDiff.toFixed(2)})</span>
     `;
+  } else if (isPredictionContrast) {
+    const range = state.predictionContrastRange;
+    scale.innerHTML = `
+      <span>${range[0].toFixed(2)} raw</span>
+      <span>prediction contrast · 2nd–98th percentile</span>
+      <span>${range[1].toFixed(2)} raw</span>
+    `;
   } else {
     const thresholdFraction = OVERFLOW_THRESHOLD / state.domainMax;
     const thresholdPercent = Math.min(100, Math.max(0, thresholdFraction * 100));
@@ -780,6 +827,13 @@ function updateLegend() {
   container.innerHTML = "";
   container.appendChild(ramp);
   container.appendChild(scale);
+  if (state.mode === "compare" && state.predictionContrastRange !== null) {
+    const note = document.createElement("div");
+    note.className = "legend-note";
+    const range = state.predictionContrastRange;
+    note.textContent = `Compare: prediction is magnified (${range[0].toFixed(2)}–${range[1].toFixed(2)} raw); truth keeps the shared raw scale.`;
+    container.appendChild(note);
+  }
 }
 
 init();
