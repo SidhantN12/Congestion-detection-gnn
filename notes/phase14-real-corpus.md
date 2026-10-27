@@ -646,6 +646,10 @@ overflow** (router first pass, its own `-verbose` table, metal2-5 cap):
 | tinyRocket u85_s3 | 87.28% | 14 / 19 / 5,872 | 1.3871 / 1.4800 | 2,670 of 7,921 (33.71%; H 1,301, V 2,005) |
 
 (Overflow columns are the router's "Max H / Max V / Total" overflow.)
+A third overflow sample came later: **tinyRocket u72_s3 (CORE_UTILIZATION 72)
+overflowed with total 67 (H 3 / V 4 max; max ratio
+1.0667 / 1.0800)**; it was also replaced under the label-quality rule
+below. No sample in the final corpus overflows.
 Every earlier run, including the 78% uncapped dynamic_node run and the
 metal2-4 cap, routed with 0 overflow. This establishes that these designs
 can exceed routing capacity under enough pressure (placement utilisation
@@ -704,3 +708,119 @@ predicted values (ties on both sides).
   output the old number would have been within ~0.003.
 - Side observation: RUDY reaches 0.78-0.85 Spearman per channel on these
   samples, a strong baseline for Gate 4.
+
+## Label-quality rule: utilisation steps per design
+
+One rule, applied to all four designs alike and **fixed before any model
+was trained on this corpus** (the only training so far is the 4-epoch
+Gate 3 smoke run, whose numbers were not used to choose anything):
+**utilisation steps are chosen so no sample saturates.** The labels of a
+saturated sample carry little ranking information (a large tie mass at
+exactly 1.0, the hotspot set covering most of the map), so each design's
+steps are tuned to where its labels stay informative. Utilisation steps
+were already per design (each design's own default plus offsets), so
+this introduces no new kind of per-design tuning.
+
+Operationally (`flow/sweep_corpus.sh`): a sample whose combined IQR is
+below 0.17 is re-run 3 utilisation points lower with the same seed, at
+most twice, never to or below the previous variant's utilisation; after
+that the last run is kept and reported as is. 0.17 is the lower edge of
+the healthy samples in the first sweep (0.1731-0.2292).
+
+How the steps were reached:
+
+| design | first sweep | IQR (first sweep) | final steps |
+|---|---|---|---|
+| dynamic_node | 40 / 55 / 65 | 0.2267 / 0.1731 / 0.2000 | 40 / 55 / 65 |
+| ibex | 50 / 65 / 75 | 0.2246 / 0.2077 / 0.1867 | 50 / 65 / 75 |
+| aes | 45 / 60 / 70 | 0.2292 / **0.1267 / 0.0800** | 35 / 40 / 45 (tighter steps 52 / 58 still gave 0.1600 / 0.1277) |
+| tinyRocket | 60 / 75 / 85 | 0.2000 / **0.0867 / 0.0800** | 60 / 63 / 66 (IQR rule: 66 -> 63 for seed 2; 72 -> 69 -> 66 for seed 3) |
+
+aes is already heavily congested at 45 (36.1% of GCells > 0.9
+vertically), so any step above it compresses the spread; it steps down
+instead, keeping u45_s1 as the top step, with seeds 2 and 3 on the new
+35 / 40 runs. Replaced samples (aes u52_s2, u58_s3, u60_s2, u70_s3;
+tinyRocket u75_s2, u85_s3) stay in `data/raw/` and the archive, out of
+the corpus.
+
+## Final corpus (Gate 2, corrected)
+
+`SKIP_EXISTING=1 bash flow/sweep_corpus.sh` on 2026-10-27 (the full
+command without SKIP_EXISTING regenerates everything). Every attempt,
+including the ones the IQR rule replaced, is in `logs/corpus_runs.tsv`:
+
+| design | variant | util | seed | IQR | kept |
+|---|---|---|---|---|---|
+| dynamic_node | u40_s1 | 40 | 1 | 0.2267 | yes |
+| dynamic_node | u55_s2 | 55 | 2 | 0.1731 | yes |
+| dynamic_node | u65_s3 | 65 | 3 | 0.2000 | yes |
+| aes | u35_s2 | 35 | 2 | 0.3200 | yes |
+| aes | u40_s3 | 40 | 3 | 0.2400 | yes |
+| aes | u45_s1 | 45 | 1 | 0.2292 | yes |
+| ibex | u50_s1 | 50 | 1 | 0.2246 | yes |
+| ibex | u65_s2 | 65 | 2 | 0.2077 | yes |
+| ibex | u75_s3 | 75 | 3 | 0.1867 | yes |
+| tinyRocket | u60_s1 | 60 | 1 | 0.2000 | yes |
+| tinyRocket | u66_s2 | 66 | 2 | 0.1667 | no |
+| tinyRocket | u63_s2 | 63 | 2 | 0.2000 | yes |
+| tinyRocket | u72_s3 | 72 | 3 | 0.1600 | no |
+| tinyRocket | u69_s3 | 69 | 3 | 0.1667 | no |
+| tinyRocket | u66_s3 | 66 | 3 | 0.1667 | yes |
+
+Final twelve samples (`src/corpus_report.py data/raw/corpus logs`):
+
+| sample | cells | nets | grid | max H / V | > 0.9 H | > 0.9 V | == 1.0 | IQR comb | distinct comb / H / V | synth s | place->GRT s | GRT step s | total s |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| aes__u35_s2 | 14,625 | 15,077 | 74x74 | 1.0000 / 1.0000 | 235 (4.29%) | 1357 (24.78%) | 430 (7.85%) | 0.3200 | 86 / 61 / 39 | 112 | 265 | 59 | 377 |
+| aes__u40_s3 | 14,404 | 14,881 | 69x69 | 1.0000 / 1.0000 | 289 (6.07%) | 1431 (30.06%) | 498 (10.46%) | 0.2400 | 90 / 61 / 36 | 116 | 266 | 53 | 382 |
+| aes__u45_s1 | 14,524 | 15,021 | 65x65 | 1.0000 / 1.0000 | 428 (10.13%) | 1527 (36.14%) | 586 (13.87%) | 0.2292 | 95 / 61 / 41 | 101 | 227 | 52 | 328 |
+| dynamic_node__u40_s1 | 12,977 | 15,171 | 85x85 | 1.0000 / 1.0000 | 109 (1.51%) | 364 (5.04%) | 78 (1.08%) | 0.2267 | 84 / 55 / 36 | 22 | 382 | 83 | 404 |
+| dynamic_node__u55_s2 | 12,787 | 15,041 | 73x73 | 1.0000 / 1.0000 | 230 (4.32%) | 305 (5.72%) | 81 (1.52%) | 0.1731 | 88 / 58 / 37 | 19 | 402 | 93 | 421 |
+| dynamic_node__u65_s3 | 12,703 | 14,987 | 67x67 | 1.0000 / 1.0000 | 149 (3.32%) | 434 (9.67%) | 105 (2.34%) | 0.2000 | 84 / 58 / 34 | 20 | 368 | 97 | 388 |
+| ibex__u50_s1 | 14,620 | 16,850 | 83x83 | 1.0000 / 1.0000 | 247 (3.59%) | 675 (9.80%) | 131 (1.90%) | 0.2246 | 86 / 56 / 41 | 138 | 271 | 107 | 408 |
+| ibex__u65_s2 | 14,560 | 16,842 | 73x73 | 1.0000 / 1.0000 | 515 (9.66%) | 1042 (19.55%) | 244 (4.58%) | 0.2077 | 91 / 59 / 41 | 136 | 277 | 118 | 413 |
+| ibex__u75_s3 | 14,536 | 16,843 | 68x68 | 1.0000 / 1.0000 | 713 (15.42%) | 1246 (26.95%) | 380 (8.22%) | 0.1867 | 97 / 64 / 43 | 126 | 271 | 118 | 397 |
+| tinyRocket__u60_s1 | 28,587 | 33,712 | 106x106 | 1.0000 / 1.0000 | 1725 (15.35%) | 2617 (23.29%) | 995 (8.86%) | 0.2000 | 93 / 70 / 33 | 120 | 583 | 185 | 704 |
+| tinyRocket__u63_s2 | 28,579 | 33,719 | 103x103 | 1.0000 / 1.0000 | 1635 (15.41%) | 3314 (31.24%) | 1323 (12.47%) | 0.2000 | 92 / 59 / 41 | 136 | 700 | 205 | 836 |
+| tinyRocket__u66_s3 | 28,500 | 33,655 | 101x101 | 1.0000 / 1.0000 | 1729 (16.95%) | 3156 (30.94%) | 1169 (11.46%) | 0.1667 | 89 / 69 / 36 | 128 | 728 | 210 | 856 |
+
+- **12 of 12 OK, 0 duplicate maps, 0 failures, every design congests**
+  (>= 109 GCells > 0.9 in each channel on every sample).
+- **No sample overflows** (router first pass 0 / 0 / 0 on all twelve).
+- **Combined IQR 0.1667-0.3200; distinct values 84-97 combined (H 55-70,
+  V 33-43).**
+- tinyRocket's top variant used both step-downs (72 -> 69 -> 66, seed 3)
+  and is kept at IQR 0.1667 as the rule says. 0.1667 = 1/6: on these
+  quantised labels IQR moves in discrete steps (0.1600, 0.1667, 0.2000,
+  0.2400 are the values seen), so 66, 69 and seed 2's 66 all landed on
+  the same step just under 0.17. The tinyRocket variants are only 3
+  points apart (60 / 63 / 66), so its spread across variants is the
+  narrowest in the corpus.
+- dynamic_node limitation unchanged (see above).
+
+## Gate 3 on the final corpus
+
+`python tests/phase14_split_check.py` (PASS) and
+`python src/train.py --config configs/corpus_smoke.toml` (4 epochs, CPU;
+train dynamic_node + tinyRocket, val ibex, test aes):
+
+[1] split from configs/corpus_smoke.toml
+    train designs=['dynamic_node', 'tinyRocket'] samples=6 ['u40_s1', 'u55_s2', 'u60_s1', 'u63_s2', 'u65_s3', 'u66_s3']
+    val   designs=['ibex'] samples=3 ['u50_s1', 'u65_s2', 'u75_s3']
+    test  designs=['aes'] samples=3 ['u35_s2', 'u40_s3', 'u45_s1']
+    12 of 12 samples assigned, 0 in more than one split
+[2] load_config with ibex in val and test -> ValueError: a design cannot be in both val and test
+[3] split_designs with ibex in val and test -> AssertionError: design in both val and test
+PASS
+
+start corpus_smoke_v3 [a2426752f087] device=cpu amp=auto on cpu -> fp32; designs train/val/test = 2/1/1, samples 6/3/3, 6 train units
+epoch   0  train loss 0.2210 (huber 0.2079, rank 0.0263)  val spearman 0.0443 (H -0.0529 V 0.1416)  *best*  8.9s
+epoch   1  train loss 0.0488 (huber 0.0452, rank 0.0072)  val spearman 0.1564 (H 0.2724 V 0.0403)  *best*  7.8s
+epoch   2  train loss 0.0172 (huber 0.0147, rank 0.0049)  val spearman 0.2816 (H 0.3976 V 0.1657)  *best*  7.3s
+epoch   3  train loss 0.0195 (huber 0.0177, rank 0.0036)  val spearman 0.3723 (H 0.3279 V 0.4166)  *best*  7.8s
+final: best epoch 3 val spearman 0.3723; test spearman 0.4637 (H 0.6186 V 0.3088) on 3 samples
+
+First epoch train loss 0.2210, last (epoch 3) 0.0195, lowest 0.0172 at
+epoch 2. Val Spearman rises every epoch (0.0443 -> 0.3723); test
+Spearman on aes (unseen design) 0.4637 (H 0.6186, V 0.3088). Smoke test
+only. The earlier Gate 3 run on the first-sweep corpus is superseded.
