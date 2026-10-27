@@ -633,3 +633,74 @@ Split rejection (`python tests/phase14_split_check.py`):
 [2] load_config with ibex in val and test -> ValueError: a design cannot be in both val and test
 [3] split_designs with ibex in val and test -> AssertionError: design in both val and test
 PASS
+
+## First genuine overflow in the project: tinyRocket at 75% and 85%
+
+**tinyRocket u75_s2 and u85_s3 (first Gate 2 sweep) are the first runs
+anywhere in this project, Phases 2-14, where the router reports real
+overflow** (router first pass, its own `-verbose` table, metal2-5 cap):
+
+| sample | total usage | overflow H / V / total | max ratio H / V | GCells > 1.0 (combined) |
+|---|---|---|---|---|
+| tinyRocket u75_s2 | 73.36% | 4 / 3 / 47 | 1.1333 / 1.0800 | 39 of 9,025 (0.43%; H 28, V 13) |
+| tinyRocket u85_s3 | 87.28% | 14 / 19 / 5,872 | 1.3871 / 1.4800 | 2,670 of 7,921 (33.71%; H 1,301, V 2,005) |
+
+(Overflow columns are the router's "Max H / Max V / Total" overflow.)
+Every earlier run, including the 78% uncapped dynamic_node run and the
+metal2-4 cap, routed with 0 overflow. This establishes that these designs
+can exceed routing capacity under enough pressure (placement utilisation
+plus the metal2-5 cap). Both samples are replaced in the corpus (next
+section) because their maps are saturated, not because the overflow is
+wrong; the runs, logs and .npz files are kept (`data/raw/
+sweep_tinyRocket__u75_s2_*`, `__u85_s3_*`, archive
+`phase14_corpus_20261027.tar.gz`).
+
+## Known limitation: dynamic_node and confounded variants
+
+Utilisation barely moves dynamic_node's congestion and not monotonically
+(> 0.9 H 1.5 -> 4.3 -> 3.3%, V 5.0 -> 5.7 -> 9.7% at 40 / 55 / 65).
+Seed and utilisation vary together in every variant (seed 1 / 2 / 3 with
+utilisation step 0 / 1 / 2), so their effects on congestion cannot be
+separated from this corpus.
+
+## What the midrank Spearman fix changes on real samples
+
+`python tests/phase14_tie_effect.py <graphs>`: Spearman between a
+predictor and the true ratio per channel, midrank (current
+`metrics.spearman_corr`) vs the pre-8c2f0e9 argsort ranking, plus the
+min..max over 50 random tie-breaks. RUDY is continuous (ties are almost
+all on the target side); the capacity-only baseline is fitted on the
+Gate 3 training designs (dynamic_node, tinyRocket) and has 12 distinct
+predicted values (ties on both sides).
+
+| sample | predictor | ch | distinct target / pred | midrank | old argsort | old - midrank | random tie-break min..max | max abs diff vs midrank |
+|---|---|---|---|---|---|---|---|---|
+| dynamic_node__u40_s1 | RUDY | H | 55 / 6238 | 0.8517 | 0.8497 | -0.0019 | 0.8501..0.8512 | 0.0019 |
+| dynamic_node__u40_s1 | RUDY | V | 36 / 5993 | 0.8426 | 0.8393 | -0.0032 | 0.8394..0.8414 | 0.0032 |
+| dynamic_node__u40_s1 | capacity | H | 55 / 12 | 0.0861 | -0.0156 | -0.1017 | 0.0886..0.1115 | 0.1017 |
+| dynamic_node__u40_s1 | capacity | V | 36 / 12 | 0.1010 | 0.0443 | -0.0568 | 0.1066..0.1233 | 0.0568 |
+| ibex__u65_s2 | RUDY | H | 59 / 5224 | 0.8316 | 0.8307 | -0.0008 | 0.8305..0.8316 | 0.0010 |
+| ibex__u65_s2 | RUDY | V | 41 / 5221 | 0.7813 | 0.7801 | -0.0012 | 0.7791..0.7813 | 0.0023 |
+| ibex__u65_s2 | capacity | H | 59 / 12 | 0.1150 | 0.0598 | -0.0552 | 0.1078..0.1307 | 0.0552 |
+| ibex__u65_s2 | capacity | V | 41 / 12 | 0.1181 | 0.0386 | -0.0795 | 0.1132..0.1399 | 0.0795 |
+| aes__u45_s1 | RUDY | H | 61 / 3959 | 0.8548 | 0.8542 | -0.0007 | 0.8539..0.8552 | 0.0009 |
+| aes__u45_s1 | RUDY | V | 41 / 3948 | 0.8204 | 0.8176 | -0.0028 | 0.8171..0.8193 | 0.0033 |
+| aes__u45_s1 | capacity | H | 61 / 12 | 0.1621 | 0.0771 | -0.0850 | 0.1500..0.1687 | 0.0850 |
+| aes__u45_s1 | capacity | V | 41 / 12 | 0.1282 | 0.0634 | -0.0648 | 0.1311..0.1544 | 0.0648 |
+
+- **Continuous predictor (RUDY): the fix changes Spearman by at most
+  0.0033** (old minus midrank -0.0007 to -0.0032; random tie-breaks
+  span at most 0.0022). Ties in the labels alone, at 36-61 distinct
+  values per channel, barely move Spearman when the prediction is
+  continuous.
+- **Tied predictor (capacity baseline): the old code understated it by
+  0.055-0.102**, e.g. dynamic_node H 0.0861 -> -0.0156 (sign flip), and
+  random tie-breaks alone move it by up to 0.025. The argsort order is
+  not neutral: it was below every random draw in 8 of 12 rows (all six
+  capacity rows and dynamic_node's two RUDY rows).
+- So the fix was necessary for any tied predictor: the capacity and
+  density baselines, and a model that outputs near-constant values early
+  in training or on flat regions. For a trained model with continuous
+  output the old number would have been within ~0.003.
+- Side observation: RUDY reaches 0.78-0.85 Spearman per channel on these
+  samples, a strong baseline for Gate 4.
