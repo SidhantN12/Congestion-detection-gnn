@@ -9,3 +9,4 @@ data/stub/*
 .ipynb_checkpoints/
 *.egg-info/
 runs/
+logs/

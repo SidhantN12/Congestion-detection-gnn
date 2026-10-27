@@ -1,0 +1,25 @@
+# Phase 14 Gate 3: short end-to-end run on the real nangate45 corpus (CPU).
+# Graphs come from `bash flow/sweep_corpus.sh` (data/processed/corpus/).
+# Everything not listed takes the default in src/config.py.
+name = "corpus_smoke"
+seed = 0
+
+[data]
+source = "manifest"
+manifest = "data/processed/corpus/manifest.json"
+
+[split]                # by design, explicit: 2 train / 1 val / 1 test
+val_designs = ["ibex"]
+test_designs = ["aes"]
+
+[train]
+epochs = 4
+lr = 1e-3
+accum_steps = 2
+lambda_rank = 0.5
+rank_pairs = 20000
+grad_clip = 1.0
+amp = "auto"           # cpu -> fp32; see resolve_amp in src/train.py
+
+[early_stopping]
+patience = 3

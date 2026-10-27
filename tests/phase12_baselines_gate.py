@@ -55,8 +55,8 @@ def kendall_worker(n):
 
 
 def main():
-    from baselines import DensityBaseline, RUDYBaseline
-    from metrics import combined_congestion, fraction_above, kendall_tau, spearman_corr
+    from baselines import CapacityBaseline, DensityBaseline, RUDYBaseline
+    from metrics import combined_congestion, fraction_above, hotspot_detection_per_channel, kendall_tau, spearman_corr
     from model import CongestionGNN
     from partition import reference_forward
     from scalability import run_cmd
@@ -67,6 +67,7 @@ def main():
     t0 = time.perf_counter()
     train = [generate_graph(35_000, seed=s) for s in (1, 2, 3)]
     dens = DensityBaseline().fit(train)
+    cap = CapacityBaseline().fit(train)
     results["density_fit"] = dict(train="35K cells, seeds 1,2,3", time_s=time.perf_counter() - t0,
                                   n_gcells=sum(g["gcell"].num_nodes for g in train),
                                   weight=dens.weight.tolist())
@@ -85,7 +86,7 @@ def main():
         row = dict(n_gcells=int(data["gcell"].num_nodes), grid=[ny, nx],
                    model_shape=list(ref.shape), model_dtype=str(ref.dtype),
                    model_path="model(data)" if n <= 100_000 else "reference_forward")
-        for name, b in (("rudy", rudy), ("density", dens)):
+        for name, b in (("rudy", rudy), ("density", dens), ("capacity", cap)):
             t = time.perf_counter()
             pred = b(data)
             dt = time.perf_counter() - t
@@ -95,6 +96,7 @@ def main():
                      finite=bool(torch.isfinite(pred).all()),
                      spearman=[spearman_corr(pred[:, c], y[:, c]) for c in range(2)],
                      spearman_avg_ties=[avg_rank_spearman(pred[:, c], y[:, c]) for c in range(2)],
+                     hotspot=hotspot_detection_per_channel(pred.numpy(), y.numpy()),
                      frac_tied_pred=[1 - len(np.unique(pred[:, c].numpy())) / len(pred) for c in range(2)],
                      combined_congestion_shape=list(combined_congestion(grid).shape),
                      fraction_above_0_9=fraction_above(grid, 0.9),

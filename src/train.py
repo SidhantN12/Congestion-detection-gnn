@@ -28,7 +28,7 @@ import torch.nn.functional as F
 
 sys.path.insert(0, "src")
 from model import CongestionGNN
-from metrics import spearman_corr
+from metrics import hotspot_detection_per_channel, spearman_corr
 
 
 def pairwise_ranking_loss(pred, target, margin=0.0):
@@ -305,16 +305,25 @@ def evaluate(model, samples, cfg, device, amp_dtype):
         pred = torch.empty(len(ids), 2); y = torch.empty(len(ids), 2)
         pred[ids] = torch.cat(preds); y[ids] = torch.cat(ys)
         sp = [spearman_corr(pred[:, c].numpy(), y[:, c].numpy()) for c in range(2)]
+        hs = hotspot_detection_per_channel(pred.numpy(), y.numpy())
         rows.append(dict(design=s["design"], variant=s["variant"], n_gcells=len(ids),
                          spearman_h=sp[0], spearman_v=sp[1], spearman=(sp[0] + sp[1]) / 2,
-                         huber=float(F.smooth_l1_loss(pred, y))))
+                         huber=float(F.smooth_l1_loss(pred, y)),
+                         hotspot_precision_h=hs["h"]["precision"], hotspot_precision_v=hs["v"]["precision"],
+                         hotspot_recall_h=hs["h"]["recall"], hotspot_recall_v=hs["v"]["recall"],
+                         hotspot_auc_h=hs["h"]["roc_auc"], hotspot_auc_v=hs["v"]["roc_auc"],
+                         n_hotspots_h=hs["h"]["n_hotspots"], n_hotspots_v=hs["v"]["n_hotspots"]))
     by_design = {}
     for r in rows:
         by_design.setdefault(r["design"], []).append(r["spearman"])
     mean = lambda k: float(np.mean([r[k] for r in rows]))
+    # nanmean: a sample with no gcell >= 0.9 in a channel has no hotspot score
+    nanmean = lambda k: float(np.nanmean([r[k] for r in rows])) if any(np.isfinite(r[k]) for r in rows) else float("nan")
+    hotspot = {k: nanmean(k) for k in ("hotspot_precision_h", "hotspot_precision_v", "hotspot_recall_h",
+                                       "hotspot_recall_v", "hotspot_auc_h", "hotspot_auc_v")}
     return dict(spearman=mean("spearman"), spearman_h=mean("spearman_h"), spearman_v=mean("spearman_v"),
                 huber=mean("huber"), per_design={d: float(np.mean(v)) for d, v in by_design.items()},
-                n_samples=len(rows))
+                n_samples=len(rows), **hotspot)
 
 
 class MetricsLog:

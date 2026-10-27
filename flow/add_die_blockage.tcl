@@ -36,8 +36,19 @@ set band_hi_frac [expr {$band_center + $band_width / 2.0}]
 set band_lly [expr {$die_lly + int($die_height * $band_lo_frac)}]
 set band_ury [expr {$die_lly + int($die_height * $band_hi_frac)}]
 
+# Blocked layer range: BLOCKAGE_MIN_LAYER/BLOCKAGE_MAX_LAYER, defaulting to
+# the whole routing stack (Phase 3/6 behaviour). Phase 14 blocks only the
+# upper layers so band gcells keep non-zero capacity on metal2/metal3:
+# extract_congestion reports ratio 0 wherever capacity is 0, so a fully
+# blocked band would be labelled uncongested.
 set min_layer $::env(MIN_ROUTING_LAYER)
+if { [info exists ::env(BLOCKAGE_MIN_LAYER)] && $::env(BLOCKAGE_MIN_LAYER) ne "" } {
+  set min_layer $::env(BLOCKAGE_MIN_LAYER)
+}
 set max_layer $::env(MAX_ROUTING_LAYER)
+if { [info exists ::env(BLOCKAGE_MAX_LAYER)] && $::env(BLOCKAGE_MAX_LAYER) ne "" } {
+  set max_layer $::env(BLOCKAGE_MAX_LAYER)
+}
 set min_level [[$tech findLayer $min_layer] getRoutingLevel]
 set max_level [[$tech findLayer $max_layer] getRoutingLevel]
 
