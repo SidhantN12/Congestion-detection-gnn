@@ -1,0 +1,26 @@
+# Gate 4: one fixed run; select checkpoint using ibex validation only.
+name = "corpus_final"
+seed = 0
+
+[data]
+source = "manifest"
+manifest = "data/processed/corpus/manifest.json"
+
+[split]
+val_designs = ["ibex"]
+test_designs = ["aes"]
+
+[train]
+epochs = 200
+lr = 1e-3
+accum_steps = 2
+lambda_rank = 0.5
+rank_pairs = 20000
+grad_clip = 1.0
+amp = "off"
+device = "cpu"
+deterministic = true
+
+[early_stopping]
+patience = 20
+min_delta = 0.0

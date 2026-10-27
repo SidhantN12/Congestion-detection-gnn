@@ -686,6 +686,12 @@ function updateMetricsPanel(metrics) {
     <div class="metric-row"><span>Kendall V</span><span>${formatMetricValue(v.kendall)}</span></div>
     <div class="metric-row"><span>MAE H</span><span>${formatMetricValue(h.mae)}</span></div>
     <div class="metric-row"><span>MAE V</span><span>${formatMetricValue(v.mae)}</span></div>
+    <div class="metric-row"><span>RMSE H</span><span>${formatMetricValue(h.rmse)}</span></div>
+    <div class="metric-row"><span>RMSE V</span><span>${formatMetricValue(v.rmse)}</span></div>
+    <div class="metric-row"><span>Hotspot precision / recall H</span><span>${formatMetricValue(h.hotspot_precision)} / ${formatMetricValue(h.hotspot_recall)}</span></div>
+    <div class="metric-row"><span>Hotspot precision / recall V</span><span>${formatMetricValue(v.hotspot_precision)} / ${formatMetricValue(v.hotspot_recall)}</span></div>
+    <div class="metric-row"><span>ROC-AUC H</span><span>${formatMetricValue(h.hotspot_auc)}</span></div>
+    <div class="metric-row"><span>ROC-AUC V</span><span>${formatMetricValue(v.hotspot_auc)}</span></div>
     <div class="metric-note">${kendallNote}</div>
     ${fixtureNote ? `<div class="metric-note">${fixtureNote}</div>` : ""}
   `;

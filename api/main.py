@@ -1,10 +1,8 @@
 """FastAPI backend for the congestion-GNN demo frontend.
 
-Serves the Gate 1 stub designs (data/stub/, see
-scripts/generate_stub_fixtures.py) today. The same routes will serve the
-real nangate45 corpus once it's copied into data/processed/ and a
-trained checkpoint exists (Gate 4) - model_registry.load_model() picks
-that up automatically, so nothing here needs to change for that switch.
+Serves the real corpus when a checkpoint and corpus/api_manifest.json
+exist. Without a checkpoint, serves explicitly labelled stub fixtures.
+Prepare real metadata with scripts/prepare_real_api.py.
 
 Run: uvicorn api.main:app --reload --port 8000
 """
@@ -27,6 +25,7 @@ sys.path.insert(0, API_DIR)
 
 from designs import DesignStore
 from model_registry import load_model
+from model_registry import find_checkpoint
 
 STUB_DIR = os.path.join(ROOT, "data", "stub")
 PROCESSED_DIR = os.path.join(ROOT, "data", "processed")
@@ -37,7 +36,14 @@ state = {}
 
 @asynccontextmanager
 async def lifespan(app):
-    manifest_path = os.path.join(STUB_DIR, "manifest.json")
+    real_dir = os.path.join(PROCESSED_DIR, "corpus")
+    real_manifest = os.path.join(real_dir, "api_manifest.json")
+    has_checkpoint = find_checkpoint(PROCESSED_DIR) is not None
+    if has_checkpoint and not os.path.exists(real_manifest):
+        raise RuntimeError("Checkpoint found but corpus/api_manifest.json is missing; prepare the real corpus first.")
+    use_real = has_checkpoint
+    data_dir = real_dir if use_real else STUB_DIR
+    manifest_path = real_manifest if use_real else os.path.join(STUB_DIR, "manifest.json")
     if not os.path.exists(manifest_path):
         raise RuntimeError(
             "data/stub/manifest.json not found. Run "
@@ -47,11 +53,11 @@ async def lifespan(app):
     with open(manifest_path) as manifest_file:
         manifest_preview = json.load(manifest_file)
     first_id = manifest_preview[0]["id"]
-    sample_path = os.path.join(STUB_DIR, f"{first_id}_graph.pt")
+    sample_path = os.path.join(data_dir, f"{first_id}_graph.pt")
     sample_graph = torch.load(sample_path, weights_only=False)
 
     model_result = load_model(PROCESSED_DIR, sample_graph)
-    store = DesignStore(STUB_DIR, PROCESSED_DIR, model_result["model"], model_result["model_source"])
+    store = DesignStore(data_dir, PROCESSED_DIR, model_result["model"], model_result["model_source"], manifest_path)
     state["store"] = store
     state["checkpoint_path"] = model_result["checkpoint_path"]
 
@@ -119,7 +125,8 @@ def get_prediction(design_id: str):
         vertical=prediction_result["vertical"],
         inference_seconds=prediction_result["inference_seconds"],
         model_source=store.model_source,
-        reference_router_seconds=None,
+        reference_router_seconds=122,
+        sample_router_seconds=entry.get("reference_router_seconds"),
     )
 
 

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "aes__u35_s2",
+    "inference_seconds": 0.1488952909994623,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "aes__u40_s3",
+    "inference_seconds": 0.14461045900043246,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "aes__u45_s1",
+    "inference_seconds": 0.1429207499995755,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "dynamic_node__u40_s1",
+    "inference_seconds": 0.13373091599987674,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "dynamic_node__u55_s2",
+    "inference_seconds": 0.12574795900036406,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "dynamic_node__u65_s3",
+    "inference_seconds": 0.12105712499942456,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "ibex__u50_s1",
+    "inference_seconds": 0.14874608300033287,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "ibex__u65_s2",
+    "inference_seconds": 0.14638704200024222,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "ibex__u75_s3",
+    "inference_seconds": 0.14737120799964032,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "tinyRocket__u60_s1",
+    "inference_seconds": 0.3009537910002109,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "tinyRocket__u63_s2",
+    "inference_seconds": 0.3031287499998143,
+    "reference_router_seconds": 122
+  },
+  {
+    "id": "tinyRocket__u66_s3",
+    "inference_seconds": 0.30066183300004923,
+    "reference_router_seconds": 122
+  }
+]

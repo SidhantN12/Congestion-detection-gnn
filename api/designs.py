@@ -29,6 +29,7 @@ import torch
 
 from metrics import kendall_tau
 from metrics import spearman_corr
+from metrics import hotspot_detection
 
 KENDALL_EXACT_MAX_GCELLS = 14000
 KENDALL_SAMPLE_SIZE = 2000
@@ -66,17 +67,18 @@ def select_kendall(pred_channel, truth_channel, kendall_tau_fn=kendall_tau):
 
 
 class DesignStore:
-    def __init__(self, stub_dir, processed_dir, model, model_source):
+    def __init__(self, stub_dir, processed_dir, model, model_source, manifest_path=None):
         self.stub_dir = stub_dir
         self.processed_dir = processed_dir
         self.model = model
         self.model_source = model_source
+        self.manifest_path = manifest_path or os.path.join(stub_dir, "manifest.json")
         self.manifest = self._load_manifest()
         self.graph_cache = {}
         self.latency_cache = {}
 
     def _load_manifest(self):
-        manifest_path = os.path.join(self.stub_dir, "manifest.json")
+        manifest_path = self.manifest_path
         with open(manifest_path) as manifest_file:
             entries = json.load(manifest_file)
         by_id = {}
@@ -170,6 +172,7 @@ class DesignStore:
             rmse = float(np.sqrt(np.mean((pred_channel - truth_channel) ** 2)))
 
             kendall_result = select_kendall(pred_channel, truth_channel)
+            hotspot = hotspot_detection(pred_channel, truth_channel)
 
             result[channel_name] = dict(
                 spearman=spearman,
@@ -177,6 +180,9 @@ class DesignStore:
                 kendall_sampled=kendall_result["kendall_sampled"],
                 mae=mae,
                 rmse=rmse,
+                hotspot_precision=hotspot["precision"],
+                hotspot_recall=hotspot["recall"],
+                hotspot_auc=hotspot["roc_auc"],
             )
         return result
 

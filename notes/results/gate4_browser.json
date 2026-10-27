@@ -1,0 +1,32 @@
+{
+  "reference": "dynamic_node__k5b_gui_heatmap.csv",
+  "corpus_sample": "dynamic_node__u40_s1",
+  "reference_labels_equal": true,
+  "reference_cells": 7225,
+  "max_ratio_difference": 4.838709677379427e-08,
+  "held_out_design": "aes__u35_s2",
+  "held_out_metrics_text": "Spearman H\n0.793\nSpearman V\n0.780\nKendall H\n0.599\nKendall V\n0.594\nMAE H\n0.134\nMAE V\n0.163\nRMSE H\n0.158\nRMSE V\n0.186\nHotspot precision / recall H\n0.119 / 0.119\nHotspot precision / recall V\n0.601 / 0.601\nROC-AUC H\n0.824\nROC-AUC V\n0.849\nKendall computed exactly over every gcell.",
+  "banner_hidden": true,
+  "split_label": "TEST (HELD OUT)\n14,625 cells \u00b7 grid 74\u00d774",
+  "orientation_probe": {
+    "top": [
+      255,
+      0,
+      0,
+      255
+    ],
+    "bottom": [
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  "pixels": {
+    "matching": 7225,
+    "flippedMatching": 309,
+    "total": 7225,
+    "maxError": 0
+  },
+  "browser_errors": []
+}

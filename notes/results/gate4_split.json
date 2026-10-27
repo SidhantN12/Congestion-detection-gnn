@@ -1,0 +1,68 @@
+{
+ "train": [
+  "dynamic_node",
+  "tinyRocket"
+ ],
+ "val": [
+  "ibex"
+ ],
+ "test": [
+  "aes"
+ ],
+ "samples": {
+  "train": [
+   [
+    "dynamic_node",
+    "u40_s1"
+   ],
+   [
+    "dynamic_node",
+    "u55_s2"
+   ],
+   [
+    "dynamic_node",
+    "u65_s3"
+   ],
+   [
+    "tinyRocket",
+    "u60_s1"
+   ],
+   [
+    "tinyRocket",
+    "u63_s2"
+   ],
+   [
+    "tinyRocket",
+    "u66_s3"
+   ]
+  ],
+  "val": [
+   [
+    "ibex",
+    "u50_s1"
+   ],
+   [
+    "ibex",
+    "u65_s2"
+   ],
+   [
+    "ibex",
+    "u75_s3"
+   ]
+  ],
+  "test": [
+   [
+    "aes",
+    "u35_s2"
+   ],
+   [
+    "aes",
+    "u40_s3"
+   ],
+   [
+    "aes",
+    "u45_s1"
+   ]
+  ]
+ }
+}

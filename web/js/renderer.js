@@ -133,13 +133,15 @@ export class GridRenderer {
     const vp = this.viewport;
     const viewportWidth = vp.x1 - vp.x0;
     const viewportHeight = vp.y1 - vp.y0;
-    // Negative destination height flips the blit vertically: source row
-    // vp.y0 (smallest gcell y) lands at the bottom of destRect, source
-    // row vp.y1 (largest gcell y) lands at the top - see gridYToCanvasY.
+    // drawImage with a negative height extends the destination rectangle
+    // upward but does not reverse pixels. Flip the coordinate system so
+    // the smallest physical y lands at the bottom, matching the overlays.
+    ctx.translate(destRect.x, destRect.y + destRect.height);
+    ctx.scale(1, -1);
     ctx.drawImage(
       entry.canvas,
       vp.x0, vp.y0, viewportWidth, viewportHeight,
-      destRect.x, destRect.y + destRect.height, destRect.width, -destRect.height,
+      0, 0, destRect.width, destRect.height,
     );
     ctx.restore();
   }

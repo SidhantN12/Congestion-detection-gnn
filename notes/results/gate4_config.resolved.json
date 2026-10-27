@@ -1,0 +1,55 @@
+{
+ "config": {
+  "name": "corpus_final",
+  "seed": 0,
+  "out_dir": "runs",
+  "data": {
+   "source": "manifest",
+   "manifest": "data/processed/corpus/manifest.json",
+   "cache_dir": "data/processed/datasets",
+   "synthetic": {
+    "n_designs": 8,
+    "cells_min": 4000,
+    "cells_max": 8000,
+    "variants": 3,
+    "variant_sigma": 2.0
+   }
+  },
+  "split": {
+   "val_frac": 0.25,
+   "test_frac": 0.125,
+   "val_designs": [
+    "ibex"
+   ],
+   "test_designs": [
+    "aes"
+   ]
+  },
+  "model": {
+   "hidden_dim": 64,
+   "num_layers": 3
+  },
+  "partition": {
+   "enabled": false,
+   "budget_gib": 2.0,
+   "degree_cap": 512
+  },
+  "train": {
+   "epochs": 200,
+   "lr": 0.001,
+   "weight_decay": 0.0,
+   "accum_steps": 2,
+   "lambda_rank": 0.5,
+   "rank_pairs": 20000,
+   "grad_clip": 1.0,
+   "amp": "off",
+   "device": "cpu",
+   "deterministic": true
+  },
+  "early_stopping": {
+   "patience": 20,
+   "min_delta": 0.0
+  }
+ },
+ "hash": "a02c30374e2c"
+}
